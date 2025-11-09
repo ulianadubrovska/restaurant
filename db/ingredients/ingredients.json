@@ -1,0 +1,80 @@
+{
+  "ingredients": {
+    "base": [
+      { "name": "Рис", "photo": "rice.png", "price": 2.8, "kcal": 220, "taste": "neutral" },
+      { "name": "Паста", "photo": "pasta.png", "price": 3.5, "kcal": 280, "taste": "creamy" },
+      { "name": "Кіноа", "photo": "quinoa.png", "price": 3.0, "kcal": 250, "taste": "nutty" },
+      { "name": "Картопля", "photo": "potato.png", "price": 2.0, "kcal": 190, "taste": "starchy" },
+      { "name": "Булгур", "photo": "bulgur.png", "price": 2.6, "kcal": 210, "taste": "grainy" },
+      { "name": "Кус-кус", "photo": "couscous.png", "price": 2.5, "kcal": 200, "taste": "soft" },
+      { "name": "Полента", "photo": "polenta.png", "price": 2.7, "kcal": 230, "taste": "corn" },
+      { "name": "Рис басматі", "photo": "basmati_rice.png", "price": 3.0, "kcal": 210, "taste": "aromatic" },
+      { "name": "Скляна локшина", "photo": "glass_noodles.png", "price": 3.2, "kcal": 190, "taste": "neutral" },
+      { "name": "Удон", "photo": "udon.png", "price": 3.4, "kcal": 260, "taste": "soft" },
+      { "name": "Тортилья", "photo": "tortilla.png", "price": 2.8, "kcal": 250, "taste": "wheaty" },
+      { "name": "Чіабатта", "photo": "ciabatta.png", "price": 2.9, "kcal": 270, "taste": "bread" }
+    ],
+    "protein": [
+      { "name": "Курка", "photo": "chicken.png", "price": 3.2, "kcal": 160, "taste": "savory" },
+      { "name": "Лосось", "photo": "salmon.png", "price": 4.5, "kcal": 210, "taste": "oily" },
+      { "name": "Тунець", "photo": "tuna.png", "price": 4.2, "kcal": 190, "taste": "meaty" },
+      { "name": "Індичка", "photo": "turkey.png", "price": 3.4, "kcal": 150, "taste": "mild" },
+      { "name": "Яловичина", "photo": "beef.png", "price": 4.0, "kcal": 250, "taste": "rich" },
+      { "name": "Креветки", "photo": "shrimp.png", "price": 4.8, "kcal": 120, "taste": "seafood" },
+      { "name": "Тофу", "photo": "tofu.png", "price": 2.6, "kcal": 120, "taste": "neutral" },
+      { "name": "Квасоля", "photo": "beans.png", "price": 2.0, "kcal": 140, "taste": "earthy" },
+      { "name": "Свинина", "photo": "pork.png", "price": 3.8, "kcal": 270, "taste": "fatty" },
+      { "name": "Яйце", "photo": "egg.png", "price": 1.2, "kcal": 80, "taste": "soft" },
+      { "name": "Мідії", "photo": "mussels.png", "price": 4.0, "kcal": 90, "taste": "seafood" },
+      { "name": "Восьминіг", "photo": "octopus.png", "price": 2.2, "kcal": 130, "taste": "creamy" }
+    ],
+    "veggies": [
+      { "name": "Броколі", "photo": "broccoli.png", "price": 1.2, "kcal": 30, "taste": "fresh" },
+      { "name": "Авокадо", "photo": "avocado.png", "price": 1.5, "kcal": 160, "taste": "buttery" },
+      { "name": "Помідори чері", "photo": "cherry_tomatoes.png", "price": 1.0, "kcal": 20, "taste": "sweet" },
+      { "name": "Огірок", "photo": "cucumber.png", "price": 0.9, "kcal": 15, "taste": "fresh" },
+      { "name": "Кукурудза", "photo": "corn.png", "price": 1.1, "kcal": 70, "taste": "sweet" },
+      { "name": "Перець", "photo": "pepper.png", "price": 1.2, "kcal": 25, "taste": "sweet" },
+      { "name": "Шпинат", "photo": "spinach.png", "price": 1.0, "kcal": 18, "taste": "leafy" },
+      { "name": "Морква", "photo": "carrot.png", "price": 1.0, "kcal": 40, "taste": "sweet" },
+      { "name": "Рукола", "photo": "arugula.png", "price": 1.0, "kcal": 10, "taste": "peppery" },
+      { "name": "Цукіні", "photo": "zucchini.png", "price": 0.8, "kcal": 30, "taste": "crisp" },
+      { "name": "Оливки", "photo": "olives.png", "price": 1.4, "kcal": 80, "taste": "salty" },
+      { "name": "Гриби шампіньйони", "photo": "mushrooms.png", "price": 1.2, "kcal": 25, "taste": "umami" }
+    ],
+    "sauces": [
+      { "name": "Песто", "photo": "pesto.jpg", "price": 1.6, "kcal": 140, "taste": "herbal" },
+      { "name": "Теріякі", "photo": "teriyaki.jpg", "price": 1.5, "kcal": 130, "taste": "sweet" },
+      { "name": "Цезар", "photo": "caesar.jpg", "price": 1.4, "kcal": 120, "taste": "creamy" },
+      { "name": "Барбекю", "photo": "bbq.jpg", "price": 1.3, "kcal": 110, "taste": "smoky" },
+      { "name": "Гірчичний", "photo": "mustard.jpg", "price": 1.1, "kcal": 90, "taste": "spicy" },
+      { "name": "Солодко-кислий", "photo": "sweet_sour.jpg", "price": 1.3, "kcal": 100, "taste": "tangy" },
+      { "name": "Соєвий соус", "photo": "soy_sauce.jpg", "price": 1.0, "kcal": 60, "taste": "salty" },
+      { "name": "Сальса", "photo": "salsa.jpg", "price": 1.2, "kcal": 70, "taste": "spicy" }
+    ],
+    "herbs": [
+      { "name": "Базилік", "photo": "basil.jpg", "price": 0.5, "kcal": 2, "taste": "fresh" },
+      { "name": "Кінза", "photo": "cilantro.jpg", "price": 0.4, "kcal": 3, "taste": "herbal" },
+      { "name": "Петрушка", "photo": "parsley.jpg", "price": 0.4, "kcal": 2, "taste": "fresh" },
+      { "name": "М’ята", "photo": "mint.jpg", "price": 0.5, "kcal": 2, "taste": "fresh" },
+      { "name": "Кріп", "photo": "dill.jpg", "price": 0.4, "kcal": 2, "taste": "herbal" },
+      { "name": "Мікрозелень", "photo": "microgreens.jpg", "price": 0.6, "kcal": 3, "taste": "fresh" },
+      { "name": "Орегано", "photo": "oregano.jpg", "price": 0.5, "kcal": 3, "taste": "spicy" },
+      { "name": "Розмарин", "photo": "rosemary.jpg", "price": 0.5, "kcal": 3, "taste": "woody" },
+      { "name": "Часник сушений", "photo": "garlic_powder.jpg", "price": 0.3, "kcal": 5, "taste": "spicy" },
+      { "name": "Паприка копчена", "photo": "smoked_paprika.jpg", "price": 0.4, "kcal": 5, "taste": "smoky" },
+      { "name": "Карі", "photo": "curry.jpg", "price": 0.4, "kcal": 6, "taste": "spicy" },
+      { "name": "Суміш перців", "photo": "pepper_mix.jpg", "price": 0.4, "kcal": 4, "taste": "spicy" }
+    ],
+    "drinks": [
+      { "name": "Латте", "photo": "latte.jpg", "price": 3.0, "kcal": 180 },
+      { "name": "Матча", "photo": "matcha.jpg", "price": 3.2, "kcal": 120 },
+      { "name": "Лимонад", "photo": "lemonade.jpg", "price": 2.5, "kcal": 150 },
+      { "name": "Смузі", "photo": "smoothie.jpg", "price": 3.5, "kcal": 200 },
+      { "name": "Кава латте", "photo": "coffee_latte.jpg", "price": 3.0, "kcal": 160 },
+      { "name": "Чай жасминовий", "photo": "jasmine_tea.jpg", "price": 2.0, "kcal": 20 },
+      { "name": "Американо", "photo": "americano.jpg", "price": 2.5, "kcal": 10 },
+      { "name": "Еспресо", "photo": "espresso.jpg", "price": 2.2, "kcal": 8 }
+    ]
+  }
+}

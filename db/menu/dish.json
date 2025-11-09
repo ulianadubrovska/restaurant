@@ -1,0 +1,53 @@
+{
+  "dish": [
+    { "title": "Spaghetti Carbonara", "desc": "Classic creamy pasta with pancetta and egg yolk.", "price": "8.90", "stars": "5", "photo": "dish1", "typePhoto": "png" },
+    { "title": "Fettuccine Alfredo", "desc": "Rich butter and parmesan sauce.", "price": "9.20", "stars": "4", "photo": "dish2", "typePhoto": "png" },
+    { "title": "Penne Arrabbiata", "desc": "Spicy tomato and garlic sauce.", "price": "7.80", "stars": "4", "photo": "dish3", "typePhoto": "png" },
+    { "title": "Linguine with Mixed Seafood", "desc": "Fresh linguine pasta with shrimp, mussels, and calamari in a light tomato and white wine sauce.", "price": "12.50", "stars": "5", "photo": "dish4", "typePhoto": "png" },
+    { "title": "Ravioli Ricotta & Spinach", "desc": "Soft pasta filled with spinach and cheese.", "price": "9.70", "stars": "4", "photo": "dish5", "typePhoto": "png" },
+    { "title": "Gnocchi Pomodoro", "desc": "Potato dumplings in tomato basil sauce.", "price": "8.30", "stars": "3", "photo": "dish6", "typePhoto": "png" },
+
+    { "title": "Margherita", "desc": "Tomato, mozzarella, and basil.", "price": "7.90", "stars": "5", "photo": "dish7", "typePhoto": "png" },
+    { "title": "Quattro Formaggi", "desc": "Mozzarella, gorgonzola, parmesan, provolone.", "price": "9.80", "stars": "5", "photo": "dish8", "typePhoto": "png" },
+    { "title": "Pepperoni", "desc": "Spicy salami and cheese.", "price": "8.90", "stars": "4", "photo": "dish9", "typePhoto": "png" },
+    { "title": "Capricciosa", "desc": "Mushrooms, ham, artichokes, olives.", "price": "9.40", "stars": "4", "photo": "dish10", "typePhoto": "png" },
+    { "title": "Vegetariana", "desc": "Grilled vegetables with olive oil.", "price": "8.20", "stars": "4", "photo": "dish12", "typePhoto": "png" },
+    { "title": "Bufalina", "desc": "Buffalo mozzarella and cherry tomatoes.", "price": "9.10", "stars": "5", "photo": "dish13", "typePhoto": "png" },
+    { "title": "Calzone", "desc": "Folded pizza stuffed with ham and cheese.", "price": "9.90", "stars": "4", "photo": "dish14", "typePhoto": "png" },
+
+    { "title": "Chicken Parmigiana", "desc": "Breaded chicken with tomato sauce.", "price": "11.20", "stars": "5", "photo": "dish15", "typePhoto": "png" },
+    { "title": "Beef Tagliata", "desc": "Sliced steak with arugula and parmesan.", "price": "13.90", "stars": "5", "photo": "dish16", "typePhoto": "png" },
+    { "title": "Ossobuco Milanese", "desc": "Veal shank in wine and vegetable sauce.", "price": "14.50", "stars": "5", "photo": "dish17", "typePhoto": "png" },
+    { "title": "Grilled Salmon", "desc": "Lemon-butter glazed salmon fillet.", "price": "13.40", "stars": "4", "photo": "dish18", "typePhoto": "png" },
+    { "title": "Seabass Fillet", "desc": "Lightly grilled with herbs and olive oil.", "price": "12.80", "stars": "4", "photo": "dish19", "typePhoto": "png" },
+    { "title": "Shrimp Risotto", "desc": "Creamy risotto with king prawns.", "price": "12.50", "stars": "5", "photo": "dish20", "typePhoto": "png" },
+    { "title": "Tuna Steak", "desc": "Seared tuna with sesame crust.", "price": "13.80", "stars": "5", "photo": "dish21", "typePhoto": "png" },
+    { "title": "Grilled Octopus", "desc": "Served with lemon and baby potatoes.", "price": "14.10", "stars": "5", "photo": "dish22", "typePhoto": "png" },
+
+    { "title": "Caprese Salad", "desc": "Tomato, mozzarella, and basil drizzle.", "price": "7.50", "stars": "5", "photo": "dish23", "typePhoto": "png" },
+    { "title": "Caesar Salad", "desc": "Romaine lettuce, croutons, and dressing.", "price": "7.90", "stars": "4", "photo": "dish24", "typePhoto": "png" },
+    { "title": "Burrata Salad", "desc": "Burrata with arugula and cherry tomatoes.", "price": "8.60", "stars": "5", "photo": "dish25", "typePhoto": "png" },
+    { "title": "Greek Salad", "desc": "Feta, cucumber, tomato, and olives.", "price": "7.20", "stars": "4", "photo": "dish26", "typePhoto": "png" },
+    { "title": "Warm Chicken Salad", "desc": "Honey-grilled chicken and greens.", "price": "8.40", "stars": "4", "photo": "dish27", "typePhoto": "png" },
+    { "title": "Seafood Salad", "desc": "Shrimp and calamari with lemon dressing.", "price": "9.20", "stars": "5", "photo": "dish28", "typePhoto": "png" },
+
+    { "title": "Mushroom Risotto", "desc": "Creamy risotto with porcini mushrooms.", "price": "10.80", "stars": "5", "photo": "dish29", "typePhoto": "png" },
+    { "title": "Truffle Risotto", "desc": "White truffle cream and parmesan.", "price": "12.90", "stars": "5", "photo": "dish30", "typePhoto": "png" },
+    { "title": "Eggplant Parmigiana", "desc": "Baked eggplant with cheese.", "price": "9.60", "stars": "4", "photo": "dish31", "typePhoto": "png" },
+    { "title": "Zuppa di Pesce", "desc": "Traditional Italian seafood soup.", "price": "11.50", "stars": "4", "photo": "dish32", "typePhoto": "png" },
+    { "title": "Tomato Basil Soup", "desc": "Creamy tomato soup with herbs.", "price": "7.10", "stars": "3", "photo": "dish33", "typePhoto": "png" },
+    { "title": "Minestrone", "desc": "Hearty vegetable soup with beans and pasta.", "price": "7.40", "stars": "4", "photo": "dish34", "typePhoto": "png" },
+
+    { "title": "Chianti Classico", "desc": "Dry red wine from Tuscany.", "price": "10.90", "stars": "5", "photo": "dish35", "typePhoto": "png" },
+    { "title": "Prosecco Brut", "desc": "Sparkling Italian white wine.", "price": "9.80", "stars": "5", "photo": "dish36", "typePhoto": "png" },
+    { "title": "Pinot Grigio", "desc": "Crisp and refreshing white wine.", "price": "9.50", "stars": "4", "photo": "dish37", "typePhoto": "png" },
+    { "title": "Barolo", "desc": "Full-bodied red with deep aroma.", "price": "14.50", "stars": "5", "photo": "dish38", "typePhoto": "png" },
+    { "title": "Lambrusco", "desc": "Lightly sparkling sweet red wine.", "price": "8.70", "stars": "4", "photo": "dish39", "typePhoto": "png" },
+
+
+    { "title": "Tiramisu", "desc": "Classic coffee and mascarpone dessert.", "price": "6.90", "stars": "5", "photo": "dish41", "typePhoto": "png" },
+    { "title": "Panna Cotta", "desc": "Vanilla cream with berry sauce.", "price": "7.20", "stars": "4", "photo": "dish42", "typePhoto": "png" },
+    { "title": "Gelato Trio", "desc": "Three flavors of Italian ice cream.", "price": "7.10", "stars": "5", "photo": "dish44", "typePhoto": "png" },
+    { "title": "Affogato al Caffè", "desc": "Vanilla gelato topped with espresso.", "price": "7.50", "stars": "5", "photo": "dish45", "typePhoto": "png" }
+  ]
+}
