@@ -1,7 +1,7 @@
 // server/db.js
 import mysql from "mysql2/promise";
 
-const pool = mysql.createPool({
+export const pool = mysql.createPool({
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || "root",
@@ -12,7 +12,8 @@ const pool = mysql.createPool({
     queueLimit: 0,
 });
 
+// Повертаємо тільки rows, як очікує server.js
 export async function query(sql, params = []) {
-    const [rows] = await pool.execute(sql, params);
+    const [rows] = await pool.query(sql, params);
     return rows;
 }

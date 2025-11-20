@@ -23,10 +23,21 @@ function debounce(fn, ms = 300) {
 }
 function getCurrentUserEmail() {
     try {
-        const raw = localStorage.getItem("currentUser");
-        if (!raw) return null;
-        const u = JSON.parse(raw);
-        return u.email || null;
+        // 1) НОВИЙ формат — authUser
+        const rawAuth = localStorage.getItem("authUser");
+        if (rawAuth) {
+            const u = JSON.parse(rawAuth);
+            if (u?.email) return u.email;
+        }
+
+        // 2) СТАРИЙ формат — currentUser (на всякий випадок)
+        const rawLegacy = localStorage.getItem("currentUser");
+        if (rawLegacy) {
+            const u = JSON.parse(rawLegacy);
+            return u.email || null;
+        }
+
+        return null;
     } catch {
         return null;
     }
@@ -228,7 +239,7 @@ fetch("/api/dishes")
     .catch((err) => console.error("Menu load error:", err));
 
 function renderDishItem(item, itemId) {
-    const { title, price, stars, photo, typePhoto, back } = item;
+    const {  id, title, price, stars, photo, typePhoto, back } = item;
     const grams  = back?.grams ?? null;        // для страв
     const volume = back?.volume_ml ?? null;    // для вин/напоїв
     // рейтинг (беремо з localStorage, як і було)
@@ -256,7 +267,7 @@ function renderDishItem(item, itemId) {
         <div class="dish">
           <img height="130" src="img/photo/menu/${photo}.${typePhoto}" alt="${title}">
         </div>
-        <div class="rating-stars" role="radiogroup" aria-label="Оцініть страву" data-title="${title}">
+        <div class="rating-stars" role="radiogroup" aria-label="Оцініть страву" data-title="${title}" data-dish-id="${id}">
           ${starsHTML}
         </div>
         <p class="dish-title">${title}</p>
@@ -316,27 +327,29 @@ document.getElementById("menuParent")?.addEventListener("click", (e) => {
 
     shareDish(dish);
 });
-
-function shareDish(dish){
-    const grams = dish.grams ? ` • ${dish.grams} г` : "";
+function shareDish(dish) {
+    // грами тепер беремо з back.grams
+    const grams = dish.back?.grams ? ` • ${dish.back.grams} г` : "";
     const desc  = dish.desc ? `\n${dish.desc}` : "";
-    const url   = location.origin + location.pathname + "#menu"; // можна прив’язати до меню
+
+    const url   = location.origin + location.pathname + "#menu";
     const text  = `Дивись страву в Tammy Food:\n${dish.title}${grams} — $${(+dish.price).toFixed(2)}${desc}\n${url}`;
 
-    // Web Share API
-    if (navigator.share){
+    if (navigator.share) {
         navigator.share({
             title: dish.title,
             text,
             url
-        }).catch(()=>{ /* користувач міг скасувати — це ок */ });
+        }).catch(() => {
+            // юзер міг відмінити – це ок
+        });
     } else {
-        // Фолбек: копіюємо в буфер
         navigator.clipboard?.writeText(text)
-            .then(()=>alert("Текст для поширення скопійовано ✨"))
-            .catch(()=>alert(text));
+            .then(() => alert("Текст для поширення скопійовано ✨"))
+            .catch(() => alert(text));
     }
 }
+
 
 function buildPaginator(totalPages) {
     const paginator = document.getElementById("paginator");
@@ -382,6 +395,7 @@ function initRatings() {
     document.querySelectorAll(".rating-stars").forEach((group) => {
         const stars = group.querySelectorAll(".star");
         const title = group.dataset.title;
+        const dishId = group.dataset.dishId ? Number(group.dataset.dishId) : null;
 
         const saved = JSON.parse(localStorage.getItem("ratings") || "{}")[title] || 0;
         if (saved) highlightStars(stars, saved);
@@ -392,7 +406,7 @@ function initRatings() {
             e.stopPropagation();
             const value = +btn.dataset.value;
             highlightStars(stars, value);
-            saveRating(title, value);
+            saveRating(title, value, dishId);
         });
 
         group.addEventListener("mouseover", (e) => {
@@ -408,14 +422,43 @@ function initRatings() {
         });
     });
 }
-function highlightStars(stars, value) {
-    stars.forEach((st) => st.classList.toggle("is-active", +st.dataset.value <= value));
-}
-function saveRating(title, value) {
+
+function saveRating(title, value, dishId) {
+    // локальне збереження — як було
     const ratings = JSON.parse(localStorage.getItem("ratings") || "{}");
     ratings[title] = value;
     localStorage.setItem("ratings", JSON.stringify(ratings));
+
+    // відправка в бекенд
+    if (!dishId) return; // якщо чомусь немає id
+
+    const userEmail = getCurrentUserEmail();
+    const userHash =
+        localStorage.getItem("userHash") ||
+        (() => {
+            const h = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            localStorage.setItem("userHash", h);
+            return h;
+        })();
+
+    fetch(`${API_BASE}/api/dish-rating`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            dishId,
+            rating: value,
+            userEmail: userEmail || null,
+            userHash
+        })
+    }).catch(() => {
+        // якщо щось пішло не так – просто мовчки ігноруємо
+    });
 }
+
+function highlightStars(stars, value) {
+    stars.forEach((st) => st.classList.toggle("is-active", +st.dataset.value <= value));
+}
+
 
 /* ============================================================
    3) КОШИК
@@ -576,19 +619,62 @@ function removeItem(index) {
     updateCartDisplay();
 }
 
-function placeOrder() {
+async function placeOrder() {
     if (!cart.length) {
         alert("Ваш кошик порожній!");
         return;
     }
-    const totalText = document.getElementById("cart-total").textContent;
-    alert(`Замовлення оформлено! Сума: ${totalText}`);
-    cart = [];
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartModal();
-    updateCartDisplay();
-    closeCart();
+
+    const userEmail = getCurrentUserEmail();
+
+    const itemsPayload = cart.map((item) => {
+        const qty = item.quantity || 1;
+        const price = parseFloat(item.price) || 0;
+
+        // якщо id — число → це блюдо з меню (dish_id)
+        const dishId = typeof item.id === "number" ? item.id : null;
+
+        // на майбутнє: якщо коли-небудь будеш зберігати builder_id, можна додати поле item.builderId
+        const builderId = item.builderId || null;
+
+        return {
+            dishId,
+            builderId,
+            title: item.title,
+            unitPrice: price,
+            quantity: qty
+        };
+    });
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userEmail: userEmail || null,
+                items: itemsPayload
+            })
+        });
+
+        if (!resp.ok) {
+            throw new Error("HTTP " + resp.status);
+        }
+
+        const data = await resp.json();
+
+        alert(`Замовлення оформлено! №${data.orderId}, сума: $${data.total.toFixed(2)}`);
+
+        cart = [];
+        localStorage.setItem("cart", JSON.stringify(cart));
+        updateCartModal();
+        updateCartDisplay();
+        closeCart();
+    } catch (e) {
+        console.error("Order error:", e);
+        alert("Не вдалося оформити замовлення. Спробуйте ще раз пізніше.");
+    }
 }
+
 
 // щоб працювали onclick у HTML
 window.openCart = openCart;
@@ -671,8 +757,8 @@ async function askBackend(picked, profile = {}) {
 
 
 const picked = {
-    base: [], protein: [], veggies: [], crunch: [],
-    sauces: [], herbs: [], drinks: [], dessert: []
+    base: [], protein: [], veggies: [],
+    sauces: [], herbs: [], drinks: []
 };
 
 fetch("/api/ingredients")
@@ -811,52 +897,7 @@ async function updateTotalsAndPreview() {
 
     // якщо AI недоступний — можете або показати повідомлення, або легкий локальний текст (на твій вибір)
 
-    /* ===== Favorites (Saved Recipes) + Points ===== */
-    function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-    function getSavedRecipes(){
-        return JSON.parse(localStorage.getItem("savedRecipes") || "[]");
-    }
-    function saveRecipeToLS(rec){
-        const list = getSavedRecipes();
-        list.unshift(rec);                               // нові — нагору
-        localStorage.setItem("savedRecipes", JSON.stringify(list.slice(0,50)));
-    }
-
-    function renderSavedRecipes(){
-        const box = document.getElementById("savedRecipesList");
-        if(!box) return;
-        const list = getSavedRecipes();
-        box.innerHTML = !list.length
-            ? `<div class="soft-note">Список порожній. Збережіть перший рецепт ⭐</div>`
-            : list.map(r => `
-      <div class="saved-card">
-        <div class="saved-top">
-          <b>${r.name}</b>
-          <span class="pill">${r.totalPrice}$ • ${r.kcal} ккал</span>
-        </div>
-        <div class="saved-meta">
-          <span>Метод: ${r.method}</span>
-          <span>Час: ~${r.time} хв</span>
-          <span class="saved-date">${new Date(r.ts).toLocaleString()}</span>
-        </div>
-        <div class="saved-ings">${r.names.join(", ")}</div>
-      </div>
-    `).join("");
-    }
-
-    /* ===== Points ===== */
-    function getPoints(){ return +localStorage.getItem("points") || 0; }
-    function setPoints(v){ localStorage.setItem("points", String(v)); updatePointsBadge(); }
-    function addPoints(v){ setPoints(getPoints() + v); }
-
-    function updatePointsBadge(){
-        const b = document.getElementById("points-count");
-        if (b) b.textContent = String(getPoints());
-    }
-
-// ініціалізувати бейдж при завантаженні
-    window.addEventListener("DOMContentLoaded", updatePointsBadge);
 
     // 🔄 лоадер-картка (без великого тексту, не «миготить»)
     preview.className = "";
@@ -875,10 +916,12 @@ async function updateTotalsAndPreview() {
 
     try {
         const profile = JSON.parse(localStorage.getItem("tasteProfile") || "{}");
+        const email = getCurrentUserEmail();
+
         const r = await fetch(`${API_BASE}/api/recipe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ picked, profile }),
+            body: JSON.stringify({ picked, profile, userEmail: email || null }),
             signal: controller.signal
         }).then(x => {
             if (!x.ok) throw new Error("AI API error");
@@ -965,12 +1008,15 @@ const requestAiHint = debounce(async () => {
         aiHintEl.style.display = "block";
         aiHintEl.textContent = "Підбираємо підказку…";
 
+        const email = getCurrentUserEmail();
+
         const resp = await fetch(`${API_BASE}/api/hint`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ picked }),
+            body: JSON.stringify({ picked, userEmail: email || null }),
             signal: controller.signal
         });
+
 
         if (!resp.ok) throw new Error("AI hint error");
         const { hint } = await resp.json();
@@ -1038,7 +1084,7 @@ document.getElementById('surpriseBtn')?.addEventListener('click', () => {
     picked.protein = pickOne(ingredients.protein || []);
     picked.veggies = pickOne(ingredients.veggies || []);
     picked.drinks  = pickOne(ingredients.drinks || []);   // ← додаємо напій
-    picked.crunch = []; picked.sauces = []; picked.herbs = [];
+    picked.sauces = []; picked.herbs = [];
 
 
     const active = document.querySelector('.category-tabs .tab.active')?.dataset.cat || 'base';
@@ -1050,13 +1096,25 @@ document.getElementById('surpriseBtn')?.addEventListener('click', () => {
 });
 
 /* Кнопка “🎲 Страва-сюрприз” справа у прев’ю */
+/* Кнопка “🎲 Страва-сюрприз” справа у прев’ю */
 const rndBtn = document.getElementById("randomDish");
-rndBtn?.addEventListener("click", async () => {
+const rndDice = rndBtn?.querySelector(".random-dice");
+
+rndBtn?.addEventListener("click", async (e) => {
     if (!ingredients.base) return;
+
+    // 🔄 анімація кубика
+    if (rndDice) {
+        rndBtn.classList.add("is-rolling");
+        setTimeout(() => {
+            rndBtn.classList.remove("is-rolling");
+        }, 600);
+    }
 
     rndBtn.classList.add("loading");
     rndBtn.disabled = true;
 
+    // твоя логіка “страва-сюрприз” як була
     Object.keys(picked).forEach(k => picked[k] = []);
     const pick1 = arr => arr.length ? [arr[Math.floor(Math.random() * arr.length)]] : [];
     picked.base    = pick1(ingredients.base);
@@ -1078,6 +1136,7 @@ rndBtn?.addEventListener("click", async () => {
     rndBtn.classList.remove("loading");
     rndBtn.disabled = false;
 });
+
 
 /* Навігація табів ← → */
 (() => {
@@ -1197,13 +1256,17 @@ async function saveCurrentBuilderRecipe() {
         : "";
     const title = protInst ? `${baseName} з ${protInst}` : baseName;
 
+    const email = getCurrentUserEmail();
+
     const payload = {
+        userEmail: email || null,
         title,
         price: +totals.price.toFixed(2),
         kcal: totals.kcal,
         ingredients: all.map((x) => x.name),
         ts: Date.now()
     };
+
 
     // анімація CTA-блоку (як було)
     const cta = document.getElementById("cta-builder");
@@ -1290,43 +1353,127 @@ if (tasteForm) {
 
 
 // збереження профілю
-document.getElementById("saveProfile")?.addEventListener("click", () => {
+document.getElementById("saveProfile")?.addEventListener("click", async () => {
     const form = document.getElementById("tasteForm");
     const data = Object.fromEntries(new FormData(form).entries());
     data.cuisines = collectChips(form.querySelector('[data-name="cuisines"]'));
     data.gear = collectChips(form.querySelector('[data-name="gear"]'));
+
+    // 1) localStorage — як було
     localStorage.setItem("tasteProfile", JSON.stringify(data));
+
+    // 2) якщо юзер залогінений — шлемо в MySQL
+    const email = getCurrentUserEmail();
+    if (email) {
+        try {
+            await fetch(`${API_BASE}/api/taste-profile`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userEmail: email, profile: data })
+            });
+        } catch (e) {
+            console.warn("Taste-profile DB save failed:", e);
+        }
+    }
+
     alert("Профіль збережено ✅");
 });
 
+
 // автозаповнення
-window.addEventListener("DOMContentLoaded", () => {
-    const raw = localStorage.getItem("tasteProfile");
-    if (!raw) return;
-    const data = JSON.parse(raw);
+window.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("tasteForm");
-    for (const [k, v] of Object.entries(data)) {
-        const el = form.elements[k];
-        if (!el) continue;
-        if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") el.value = v;
+    if (!form) return;
+
+    function applyProfileToForm(data) {
+        if (!data) return;
+
+        // 1) Звичайні поля форми
+        for (const [k, v] of Object.entries(data)) {
+            const el = form.elements[k];
+            if (!el) continue;
+            if (
+                el.tagName === "INPUT" ||
+                el.tagName === "SELECT" ||
+                el.tagName === "TEXTAREA"
+            ) {
+                el.value = v;
+            }
+        }
+
+        // 2) Чіпси "cuisines"
+        const cuisinesRoot = form.querySelector('[data-name="cuisines"]');
+        if (cuisinesRoot) {
+            cuisinesRoot
+                .querySelectorAll(".chip")
+                .forEach((ch) => ch.classList.remove("active"));
+
+            (data.cuisines || []).forEach((txt) => {
+                [...cuisinesRoot.querySelectorAll(".chip")].forEach((ch) => {
+                    if (ch.textContent.trim() === txt) {
+                        ch.classList.add("active");
+                    }
+                });
+            });
+        }
+
+        // 3) Чіпси "gear"
+        const gearRoot = form.querySelector('[data-name="gear"]');
+        if (gearRoot) {
+            gearRoot
+                .querySelectorAll(".chip")
+                .forEach((ch) => ch.classList.remove("active"));
+
+            (data.gear || []).forEach((txt) => {
+                [...gearRoot.querySelectorAll(".chip")].forEach((ch) => {
+                    if (ch.textContent.trim() === txt) {
+                        ch.classList.add("active");
+                    }
+                });
+            });
+        }
+
+        // 4) Оновити шкали смаку через існуючу updateTasteUI
+        ["spice", "sweet", "salt", "acid"].forEach((field) => {
+            const hidden = document.getElementById(`taste-${field}`);
+            const val = hidden ? Number(hidden.value || 1) : 1;
+            updateTasteUI(field, val);
+        });
     }
-    (data.cuisines || []).forEach((txt) => {
-        [...form.querySelectorAll('[data-name="cuisines"] .chip')].forEach((ch) => {
-            if (ch.textContent.trim() === txt) ch.classList.add("active");
-        });
-    });
-    (data.gear || []).forEach((txt) => {
-        [...form.querySelectorAll('[data-name="gear"] .chip')].forEach((ch) => {
-            if (ch.textContent.trim() === txt) ch.classList.add("active");
-        });
-    });
-    // 🔄 додано: підтягнути UI шкал за збереженими значеннями
-    ["spice", "sweet", "salt", "acid"].forEach((field) => {
-        const hidden = document.getElementById(`taste-${field}`);
-        const val = hidden ? Number(hidden.value || 1) : 1;
-        updateTasteUI(field, val);
-    });
+
+    // 1) Локальний профіль з localStorage
+    let localProfile = null;
+    const raw = localStorage.getItem("tasteProfile");
+    if (raw) {
+        try {
+            localProfile = JSON.parse(raw);
+            applyProfileToForm(localProfile);
+        } catch (e) {
+            console.warn("Taste-profile local parse error:", e);
+        }
+    }
+
+    // 2) Якщо юзер залогінений – підтягнути профіль з сервера і перекрити
+    const email = getCurrentUserEmail();
+    if (email) {
+        try {
+            const resp = await fetch(
+                `${API_BASE}/api/taste-profile?email=${encodeURIComponent(email)}`
+            );
+            if (resp.ok) {
+                const { profile } = await resp.json();
+                if (profile) {
+                    applyProfileToForm(profile);
+                    // оновлюємо localStorage, щоб далі все було синхронно
+                    localStorage.setItem("tasteProfile", JSON.stringify(profile));
+                }
+            }
+        } catch (e) {
+            console.warn("Taste-profile load failed:", e);
+        }
+    }
 });
+
 
 // мок-API для демонстрації
 async function sendToAI(payload) {
@@ -1621,6 +1768,8 @@ window.sendEmail = sendEmail;
 
 /* ============================================================
    8) USER PANEL (off-canvas): toggle, auth mock, tabs, prefs
+/* ============================================================
+   8) USER PANEL (off-canvas) + реальний бекенд авторизації
    ============================================================ */
 (() => {
     const btnToggle = document.getElementById("userToggle");
@@ -1633,8 +1782,6 @@ window.sendEmail = sendEmail;
     const headerBtn     = btnToggle;
     const headerInitial = document.querySelector(".user-initial");
 
-    let lastFocus = null;
-
     const $    = (sel, root = panel) => root.querySelector(sel);
     const $all = (sel, root = panel) => [...root.querySelectorAll(sel)];
 
@@ -1643,6 +1790,10 @@ window.sendEmail = sendEmail;
         'textarea:not([disabled])','button:not([disabled])','iframe',
         '[tabindex]:not([tabindex="-1"])','[contenteditable="true"]'
     ].join(',');
+
+    const API_BASE = "/api";
+
+    let lastFocus = null;
 
     function trapFocus(e) {
         if (!panel.classList.contains("is-open")) return;
@@ -1688,14 +1839,12 @@ window.sendEmail = sendEmail;
         lastFocus?.focus?.();
     }
 
-    // ========= Події відкриття/закриття =========
     btnToggle.addEventListener("click", (e) => {
         e.preventDefault();
         panel.classList.contains("is-open") ? closePanel() : openPanel();
     });
     btnClose.addEventListener("click", closePanel);
     scrim.addEventListener("click", closePanel);
-
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && panel.classList.contains("is-open")) {
             e.preventDefault(); closePanel();
@@ -1704,7 +1853,7 @@ window.sendEmail = sendEmail;
         }
     });
 
-    // ========= Змінні DOM для auth =========
+    // ======= DOM для auth =======
     const guestView   = $("#guestView");
     const userView    = $("#userView");
     const nameField   = $('[data-field="name"]');
@@ -1713,30 +1862,47 @@ window.sendEmail = sendEmail;
     const userNameEl  = $(".user-name");
     const userEmailEl = $(".user-email");
 
-    const btnShowLogin  = $("#btnShowLogin");
-    const btnShowSignup = $("#btnShowSignup");
-    const guestForms    = $("#guestForms");
+    const btnShowLogin   = $("#btnShowLogin");
+    const btnShowSignup  = $("#btnShowSignup");
+    const guestActions   = $("#guestActions");
+    const guestNote      = $("#guestNote");
+    const guestForms     = $("#guestForms");
 
-    const loginForm  = $("#formLogin");
-    const signupForm = $("#formSignup");
-    const loginError = $("#loginError");
-    const signupError= $("#signupError");
+    const loginForm   = $("#formLogin");
+    const signupForm  = $("#formSignup");
+    const loginError  = $("#loginError");
+    const signupError = $("#signupError");
 
-    // ========= Зберігання користувачів =========
-    function getUsers() {
-        try { return JSON.parse(localStorage.getItem("users") || "[]"); }
-        catch { return []; }
+    // ======= Зберігання у localStorage (для фронта) =======
+    function read(key, fallback) {
+        try { return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback; }
+        catch { return fallback; }
     }
-    function saveUsers(arr) {
-        localStorage.setItem("users", JSON.stringify(arr));
+    function write(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    // ---- auth в localStorage: user + token ----
+    function getAuth() {
+        const token = localStorage.getItem("authToken") || null;
+        const user  = read("authUser", null);
+        if (!token || !user) return null;
+        return { token, user };
+    }
+    function getToken() {
+        return getAuth()?.token || null;
     }
     function getCurrentUser() {
-        try { return JSON.parse(localStorage.getItem("currentUser") || "null"); }
-        catch { return null; }
+        return getAuth()?.user || null;
     }
-    function setCurrentUser(u) {
-        if (u) localStorage.setItem("currentUser", JSON.stringify(u));
-        else   localStorage.removeItem("currentUser");
+    function setAuth(user, token) {
+        if (user && token) {
+            localStorage.setItem("authToken", token);
+            write("authUser", user);
+        } else {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("authUser");
+        }
         renderAuth();
     }
 
@@ -1746,6 +1912,30 @@ window.sendEmail = sendEmail;
         return t.split(/\s+/).map(s => s[0]?.toUpperCase()).slice(0,2).join("") || "U";
     }
 
+    // ======= Запит до бекенду з токеном =======
+    async function api(path, options = {}) {
+        const token = getToken();
+        const headers = {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+        };
+        if (token) {
+            headers.Authorization = "Bearer " + token;
+        }
+        const res = await fetch(API_BASE + path, {
+            ...options,
+            headers
+        });
+        let data = {};
+        try { data = await res.json(); } catch {}
+        if (!res.ok) {
+            const msg = data.error || "Сталася помилка.";
+            throw new Error(msg);
+        }
+        return data;
+    }
+
+    // ======= Рендер авторизації =======
     function renderAuth() {
         const u = getCurrentUser();
         const isAuth = !!u;
@@ -1770,59 +1960,85 @@ window.sendEmail = sendEmail;
             }
             headerBtn.classList.add("is-auth");
             headerBtn.title = name;
+
+            // Підтягуємо дані з бекенду
+            renderFavorites();
+            renderOrders();
+            renderPoints();
         } else {
             userNameEl.textContent  = "Гість";
             userEmailEl.textContent = "Ви не ввійшли";
             avatarInit.textContent  = "U";
-            if (headerInitial) {
-                headerInitial.hidden = true;
-            }
+            if (headerInitial) headerInitial.hidden = true;
             headerBtn.classList.remove("is-auth");
             headerBtn.title = "Гість";
         }
     }
 
-    // ========= Перемикач режимів: Увійти / Реєстрація =========
+    // ======= Перемикач логін/реєстрація (2 кроки) =======
     function switchAuthMode(mode) {
         if (!guestForms) return;
+
         guestForms.hidden = false;
+        guestActions?.classList.add("is-collapsed");
 
-        if (loginForm)  loginForm.hidden  = mode !== "login";
-        if (signupForm) signupForm.hidden = mode !== "signup";
+        panel.classList.remove("auth-mode-login", "auth-mode-signup");
+        panel.classList.add(mode === "login" ? "auth-mode-login" : "auth-mode-signup");
 
-        loginError && (loginError.textContent = "");
-        signupError && (signupError.textContent = "");
+        guestNote.textContent = mode === "login"
+            ? "Введіть email та пароль, щоб увійти."
+            : "Заповніть поля, щоб створити акаунт.";
+
+        loginForm.hidden  = mode !== "login";
+        signupForm.hidden = mode !== "signup";
+
+        if (loginError)  loginError.textContent  = "";
+        if (signupError) signupError.textContent = "";
 
         btnShowLogin?.classList.toggle("is-selected", mode === "login");
         btnShowSignup?.classList.toggle("is-selected", mode === "signup");
+
+        // злегка прокрутимо панель наверх до форм
+        panel.scrollTo({ top: guestForms.offsetTop - 40, behavior: "smooth" });
     }
 
-    btnShowLogin?.addEventListener("click", () => switchAuthMode("login"));
-    btnShowSignup?.addEventListener("click", () => switchAuthMode("signup"));
-
-    // ========= Перевірки email/пароля =========
-    function isValidEmail(email) {
+    // ======= Перевірка email / пароля =======
+    function isValidEmailBasic(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    function isValidEmail(email) {
+        const e = String(email).trim().toLowerCase();
+        if (!isValidEmailBasic(e)) return false;
+
+        const typos = ["@gma.com","@gmial.com","@gmal.com","@gmaill.com"];
+        if (typos.some(t => e.endsWith(t))) return false;
+
+        return true;
+    }
+    function emailTypoHint(email) {
+        const e = String(email).trim().toLowerCase();
+        if (e.endsWith("@gma.com")) return "Можливо, ви мали на увазі @gmail.com?";
+        return "Некоректний email.";
     }
     function isValidPassword(pw) {
         return typeof pw === "string" && pw.length >= 8;
     }
 
-    // ========= Показ / приховування пароля =========
+    // ======= Показ / приховування пароля =======
     $all(".password-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
             const field = btn.closest(".password-field");
             const input = field?.querySelector("input");
             if (!input) return;
-            const nowText = input.type === "password";
-            input.type = nowText ? "text" : "password";
-            btn.classList.toggle("is-active", nowText);
-            btn.setAttribute("aria-label", nowText ? "Сховати пароль" : "Показати пароль");
+            const show = input.type === "password";
+            input.type = show ? "text" : "password";
+            btn.classList.toggle("is-active", show);
+            btn.setAttribute("aria-label", show ? "Сховати пароль" : "Показати пароль");
         });
     });
 
-    // ========= Обробка логіну =========
-    loginForm?.addEventListener("submit", (e) => {
+    // ======= Login (через /api/auth/login) =======
+    loginForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!loginError) return;
         loginError.textContent = "";
@@ -1832,7 +2048,7 @@ window.sendEmail = sendEmail;
         const password = String(fd.get("password") || "");
 
         if (!isValidEmail(email)) {
-            loginError.textContent = "Некоректний email.";
+            loginError.textContent = emailTypoHint(email);
             return;
         }
         if (!isValidPassword(password)) {
@@ -1840,24 +2056,20 @@ window.sendEmail = sendEmail;
             return;
         }
 
-        const users = getUsers();
-        const user  = users.find(u => u.email === email);
-
-        if (!user) {
-            loginError.textContent = "Користувача з таким email не знайдено. Спробуйте зареєструватися.";
-            return;
+        try {
+            const data = await api("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ email, password })
+            });
+            setAuth(data.user, data.token);
+            closePanel();
+        } catch (err) {
+            loginError.textContent = err.message;
         }
-        if (user.password !== password) {
-            loginError.textContent = "Невірний пароль.";
-            return;
-        }
-
-        setCurrentUser({ name: user.name, email: user.email });
-        closePanel();
     });
 
-    // ========= Обробка реєстрації =========
-    signupForm?.addEventListener("submit", (e) => {
+    // ======= Signup (через /api/auth/signup) =======
+    signupForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!signupError) return;
         signupError.textContent = "";
@@ -1872,7 +2084,7 @@ window.sendEmail = sendEmail;
             return;
         }
         if (!isValidEmail(email)) {
-            signupError.textContent = "Некоректний email.";
+            signupError.textContent = emailTypoHint(email);
             return;
         }
         if (!isValidPassword(password)) {
@@ -1880,26 +2092,24 @@ window.sendEmail = sendEmail;
             return;
         }
 
-        const users = getUsers();
-        if (users.some(u => u.email === email)) {
-            signupError.textContent = "Такий email вже зареєстрований. Спробуйте увійти.";
-            switchAuthMode("login");
-            return;
+        try {
+            const data = await api("/auth/signup", {
+                method: "POST",
+                body: JSON.stringify({ name, email, password })
+            });
+            setAuth(data.user, data.token);
+            closePanel();
+        } catch (err) {
+            signupError.textContent = err.message;
         }
-
-        const newUser = { name, email, password };
-        users.push(newUser);
-        saveUsers(users);
-        setCurrentUser({ name, email });
-        closePanel();
     });
 
-    // ========= Logout =========
+    // ======= Logout =======
     $("#btnLogout")?.addEventListener("click", () => {
-        setCurrentUser(null);
+        setAuth(null, null);
     });
 
-    // ========= Tabs =========
+    // ======= Tabs =======
     const tabBtns = $all(".user-tabs .tab");
     const panels  = $all(".tab-panels .panel");
 
@@ -1911,30 +2121,162 @@ window.sendEmail = sendEmail;
         btn.addEventListener("click", () => showTab(btn.dataset.tab));
     });
 
-    // ========= Prefs =========
-    const prefsForm = $("#formPrefs");
-    function loadPrefs() {
-        try {
-            const p = JSON.parse(localStorage.getItem("userPrefs") || "{}");
-            if (!prefsForm) return;
-            for (const [k,v] of Object.entries(p)) {
-                const el = prefsForm.elements[k];
-                if (!el) continue;
-                if (el.type === "checkbox") el.checked = !!v;
-                else el.value = v;
-            }
-        } catch {}
-    }
-    prefsForm?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const fd = new FormData(prefsForm);
-        const obj = Object.fromEntries(fd.entries());
-        localStorage.setItem("userPrefs", JSON.stringify(obj));
-        alert("Вподобання збережено ✅");
-    });
+    // ======= Рендер списку вподобань з бекенду =======
+    async function renderFavorites() {
+        const user = getCurrentUser();
+        const box  = $("#savedRecipesList");
+        if (!box) return;
+        box.innerHTML = "";
+        if (!user) {
+            box.innerHTML = '<p class="soft-note">Щоб бачити вподобання, увійдіть у акаунт.</p>';
+            $("#profileFavCount") && ($("#profileFavCount").textContent = "0");
+            return;
+        }
 
-    // ========= Theme toggle (demo) =========
-    const darkToggle = document.getElementById("toggleDark");
+        try {
+            const rows = await api("/user/favorites");
+            $("#profileFavCount") && ($("#profileFavCount").textContent = rows.length);
+
+            if (!rows.length) {
+                box.innerHTML = '<p class="soft-note">Список порожній. Збережіть перший рецепт через конструктор ⭐</p>';
+                return;
+            }
+
+            rows.forEach(r => {
+                let ings = [];
+                try {
+                    ings = Array.isArray(r.ingredients)
+                        ? r.ingredients
+                        : JSON.parse(r.ingredients || "[]");
+                } catch { ings = []; }
+
+                const card = document.createElement("div");
+                card.className = "saved-card";
+                card.innerHTML = `
+                    <div class="saved-top">
+                        <div class="saved-title">${r.title}</div>
+                        <div class="saved-date">${new Date(r.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="saved-meta">
+                        <span>${Number(r.total_price || 0).toFixed(2)} ₴</span>
+                        <span>${r.total_kcal} ккал</span>
+                    </div>
+                    <div class="saved-ings">${ings.join(", ")}</div>
+                `;
+                box.appendChild(card);
+            });
+        } catch (err) {
+            box.innerHTML = `<p class="soft-note">Помилка завантаження вподобань: ${err.message}</p>`;
+        }
+    }
+
+    // ======= Рендер замовлень з бекенду =======
+    async function renderOrders() {
+        const user = getCurrentUser();
+        const box  = $("#ordersList");
+        if (!box) return;
+        box.innerHTML = "";
+
+        if (!user) {
+            box.innerHTML = '<p class="soft-note">Увійдіть, щоб бачити свої замовлення.</p>';
+            return;
+        }
+
+        try {
+            const rows = await api("/user/orders");
+            $("#profileOrderCount") && ($("#profileOrderCount").textContent = rows.length);
+            // масив
+            if (!rows.length) {
+                box.innerHTML = '<p class="soft-note">Поки що замовлень немає. Спробуйте оформити перше замовлення 🍽️</p>';
+                return;
+            }
+
+            rows.forEach(o => {
+                const card = document.createElement("div");
+                card.className = "saved-card";
+                card.innerHTML = `
+                    <div class="saved-top">
+                        <div class="saved-title">Замовлення #${o.id}</div>
+                        <div class="saved-date">${new Date(o.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="saved-meta">
+                        <span>Сума: ${Number(o.total_price || 0).toFixed(2)} ₴</span>
+                        <span>Статус: ${o.status}</span>
+                        <span>${o.items_count} позицій</span>
+                    </div>
+                `;
+                box.appendChild(card);
+            });
+        } catch (err) {
+            box.innerHTML = `<p class="soft-note">Помилка завантаження замовлень: ${err.message}</p>`;
+        }
+    }
+
+    // ======= Рендер балів =======
+    async function renderPoints() {
+        const user = getCurrentUser();
+        const badge      = $("#pointsBadge");
+        const valueEl    = $("#pointsValue");
+        const historyBox = $("#pointsHistory");
+        const faqBox     = $("#pointsFaq");
+        if (!badge || !valueEl || !historyBox) return;
+
+        if (!user) {
+            valueEl.textContent = "0";
+            historyBox.innerHTML = '<p class="soft-note">Увійдіть або зареєструйтеся, щоб бачити свої бали.</p>';
+            if (faqBox) faqBox.hidden = true;
+            return;
+        }
+
+        // клік по бейджу — показ/приховати FAQ
+        if (!badge.dataset.bindClick) {
+            badge.dataset.bindClick = "1";
+            badge.addEventListener("click", () => {
+                if (!faqBox) return;
+                const hidden = faqBox.hidden;
+                faqBox.hidden = !hidden;
+                faqBox.classList.toggle("points-faq--visible", !hidden);
+            });
+        }
+
+        try {
+            const data = await api("/user/points"); // { balance, history }
+
+            valueEl.textContent = data.balance ?? 0;
+
+            // короткий бейдж в профілі
+            const brief = document.getElementById("profilePointsBrief");
+            if (brief) {
+                brief.textContent = data.balance ?? 0;
+            }
+
+            if (!data.history || !data.history.length) {
+                historyBox.innerHTML = '<p class="soft-note">Історія балів поки порожня.</p>';
+                return;
+            }
+
+            historyBox.innerHTML = "";
+            data.history.forEach(h => {
+                const row = document.createElement("div");
+                row.className = "points-history-item";
+                const sign = h.delta > 0 ? "+" : "";
+                row.innerHTML = `
+                <span>${sign}${h.delta} балів — ${h.reason}</span>
+                <span>${new Date(h.created_at).toLocaleString()}</span>
+            `;
+                historyBox.appendChild(row);
+            });
+        } catch (err) {
+            historyBox.innerHTML = `<p class="soft-note">Помилка завантаження балів: ${err.message}</p>`;
+        }
+    }
+
+
+    // ======= Prefs & Settings =======
+    const darkToggle  = document.getElementById("toggleDark");
+    const newsToggle  = document.getElementById("toggleEmailNews");
+    const btnClearDemo= document.getElementById("btnClearDemo");
+
     function applyTheme() {
         const t = localStorage.getItem("theme") || "light";
         document.documentElement.classList.toggle("theme-dark", t === "dark");
@@ -1945,15 +2287,90 @@ window.sendEmail = sendEmail;
         applyTheme();
     });
 
-    // ========= Public API (якщо треба з інших скриптів) =========
-    window.openUserPanel  = openPanel;
-    window.closeUserPanel = closePanel;
+    function loadSettings() {
+        const s = read("userSettings", { emailNews:false });
+        if (newsToggle) newsToggle.checked = !!s.emailNews;
+    }
+    newsToggle?.addEventListener("change", () => {
+        write("userSettings", { emailNews: newsToggle.checked });
+    });
 
-    // ========= Init =========
-    renderAuth();
-    loadPrefs();
+    // Тепер кнопка чистить лише локальні дані (тему, кеш профілю)
+    btnClearDemo?.addEventListener("click", () => {
+        if (!confirm("Очистити локальні налаштування (тема, кеш профілю)?")) return;
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUser");
+        localStorage.removeItem("theme");
+        localStorage.removeItem("userSettings");
+        applyTheme();
+        renderAuth();
+        alert("Локальні дані очищено ✅");
+    });
+
+    // ======= Публічне API для конструктора =======
+    window.tammyUser = {
+        async addFavorite(recipe) {
+            const user = getCurrentUser();
+            if (!user) {
+                alert("Спочатку увійдіть, щоб зберігати рецепти.");
+                openPanel();
+                return;
+            }
+
+            try {
+                await api("/user/favorites", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        title     : recipe.title,
+                        totalPrice: Number(recipe.totalPrice || 0),
+                        totalKcal : Number(recipe.totalKcal || 0),
+                        ingredients: recipe.ingredients || []
+                    })
+                });
+
+                renderFavorites();
+                renderPoints();
+                alert("Рецепт збережено у вашому акаунті ✅");
+            } catch (err) {
+                alert("Не вдалося зберегти рецепт: " + err.message);
+            }
+        },
+
+        async addOrder(orderPayload) {
+            // orderPayload: { items: [...], totalPrice }
+            if (!orderPayload || !Array.isArray(orderPayload.items) || !orderPayload.items.length) {
+                alert("Кошик порожній.");
+                return;
+            }
+            const user = getCurrentUser();
+
+            try {
+                const res = await fetch("/api/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userEmail: user?.email || null,
+                        items    : orderPayload.items
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || "Помилка створення замовлення.");
+                }
+
+                renderOrders();
+                renderPoints();
+                alert(`Замовлення #${data.orderId} створено ✅`);
+            } catch (err) {
+                alert("Не вдалося оформити замовлення: " + err.message);
+            }
+        }
+    };
+
+    // ======= INIT =======
     applyTheme();
+    loadSettings();
+    renderAuth();
     const activeTab = panel.querySelector(".user-tabs .tab.is-active")?.dataset.tab || "profile";
     showTab(activeTab);
-    switchAuthMode("login"); // стартово показуємо режим "Увійти"
 })();

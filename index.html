@@ -69,11 +69,17 @@
                 </p>
 
                 <div class="hero__actions">
-                    <a class="btn btn-primary" href="#menu">Get Started</a>
-                    <a class="btn btn-ghost" href="#ai-chef">
-                        <span class="play">▶</span> More Information
+                    <a class="btn hero-btn-primary" href="#menu">
+                        <span>Explore Menu</span>
+                    </a>
+
+                    <a class="btn hero-btn-ghost" href="#ai-chef">
+                        <span class="play">▶</span>
+                        <span>AI Recipe Wizard</span>
                     </a>
                 </div>
+
+
             </div>
 
             <!-- Права частина (тарілка + анімації) -->
@@ -268,7 +274,12 @@
                 <div class="result-box">
                     <p><b>Ціна:</b> <span id="price">$0</span></p>
                     <p><b>Калорійність:</b> <span id="calories">0 kcal</span></p>
-                    <button class="random-btn" id="randomDish">🎲 Страва-сюрприз</button>
+
+                    <!-- RANDOM DISH -->
+                    <button class="random-btn" id="randomDish">
+                        <span class="random-dice">🎲</span>
+                        <span>Страва-сюрприз</span>
+                    </button>
                 </div>
 
                 <div class="composition">
@@ -276,14 +287,20 @@
                     <ul id="compositionList"></ul>
                 </div>
 
-                <div class="preview-actions">
-                    <button id="builderCheckout" class="btn btn-primary" style="margin-top:12px;width:100%;">
-                        Замовити
+                <div class="builder-actions">
+                    <button id="builderCheckout"
+                            type="button"
+                            class="btn btn-primary builder-checkout builder-checkout--fancy">
+                        <span class="checkout-label-main">Замовити</span>
                     </button>
 
-                    <button id="clearPicked" type="button"  class="btn btn-ghost">Очистити</button>
+                    <!-- без .btn, тільки свій клас -->
+                    <button id="clearPicked" type="button" class="preview-clear preview-clear--wide">
+                        <span class="clear-icon">🧹</span>
+                        <span>Очистити</span>
+                    </button>
                 </div>
-            </div>
+
         </div>
     </section>
 
@@ -633,94 +650,141 @@
 
 <!-- 🔹 Права панель користувача -->
 <!-- 🔹 Права панель користувача -->
+<!-- Кнопка у хедері -->
+
+<!-- Права панель -->
 <aside class="user-panel" id="userPanel" aria-hidden="true">
     <div class="user-panel__head">
-        <div class="user-avatar"><span class="user-avatar__initial">U</span></div>
+        <div class="user-avatar">
+            <span class="user-avatar__initial">U</span>
+        </div>
         <div class="user-panel__meta">
             <div class="user-name">Гість</div>
             <div class="user-email">Ви не ввійшли</div>
         </div>
-        <button class="user-panel__close" id="userClose">×</button>
+        <button class="user-panel__close" id="userClose" aria-label="Закрити">×</button>
     </div>
 
-    <!-- Вид для гостя -->
-    <div class="guest-view" id="guestView">
-        <h3>Вітаємо в Tammy Food!</h3>
-        <p class="guest-text">
-            Увійдіть у свій акаунт, щоб зберігати вподобані страви з конструктора,
-            переглядати історію замовлень та збирати бали.
-        </p>
+    <!-- ======= ГОСТЬ ======= -->
+    <section class="guest-view" id="guestView">
+        <!-- маленький «герой» з анімацією -->
+        <header class="user-hero">
+            <h3 class="user-hero__title">Вітаємо в Tammy Food!</h3>
+            <p class="user-hero__subtitle">
+                Увійдіть у свій акаунт, щоб зберігати улюблені страви з конструктора,
+                переглядати історію замовлень та збирати Tammy-бали.
+            </p>
 
-        <div class="guest-actions">
-            <button type="button" class="btn ghost is-selected" id="btnShowLogin">
-                Увійти
-            </button>
-            <button type="button" class="btn ghost" id="btnShowSignup">
-                Створити акаунт
-            </button>
+            <div class="user-hero__orbit">
+                <div class="orbit-dot orbit-dot--1"></div>
+                <div class="orbit-dot orbit-dot--2"></div>
+                <div class="orbit-dot orbit-dot--3"></div>
+                <div class="orbit-center">
+                    <span class="orbit-center__icon">🍝</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- КРОК 1: вибір режиму -->
+        <div class="guest-actions" id="guestActions">
+            <div class="guest-actions__buttons">
+                <button type="button"
+                        class="btn btn-pill is-selected"
+                        id="btnShowLogin">
+                    Увійти
+                </button>
+                <button type="button"
+                        class="btn btn-pill"
+                        id="btnShowSignup">
+                    Створити акаунт
+                </button>
+            </div>
         </div>
 
-        <p class="guest-note">
-            Ще не зареєстровані? Натисніть «Створити акаунт» — це забере менше хвилини.
+        <p class="guest-note" id="guestNote">
+            Спочатку оберіть: <b>«Увійти»</b> чи <b>«Створити акаунт»</b>.
         </p>
 
-        <div id="guestForms" class="guest-forms">
+        <!-- КРОК 2: логін / реєстрація (з’являється відразу під текстом, без великої «дірки») -->
+        <div id="guestForms" class="guest-forms" hidden>
             <!-- Форма входу -->
-            <form id="formLogin" class="auth-form">
-                <h4>Увійти</h4>
+            <form id="formLogin" class="auth-card" hidden>
+                <p class="auth-card__hint">
+                    Введіть email та пароль, щоб увійти.
+                </p>
 
-                <div class="field">
-                    <label for="loginEmail">Email</label>
+                <label class="field" for="loginEmail">
+                    <span class="field__label">Email</span>
                     <input id="loginEmail" type="email" name="email"
                            placeholder="email@example.com" required />
-                </div>
+                </label>
 
-                <div class="field password-field">
-                    <label for="loginPassword">Пароль</label>
-                    <input id="loginPassword" type="password" name="password"
-                           placeholder="Мінімум 8 символів" required minlength="8" />
-                    <button type="button" class="password-toggle"
-                            aria-label="Показати пароль">👁</button>
-                </div>
+                <label class="field password-field" for="loginPassword">
+                    <span class="field__label">Пароль</span>
+                    <div class="field__with-icon">
+                        <input id="loginPassword" type="password" name="password"
+                               placeholder="Мінімум 8 символів"
+                               required minlength="8" />
+                        <!-- одне «око» -->
+                        <button type="button"
+                                class="password-toggle"
+                                aria-label="Показати пароль">
+                            <span class="password-toggle__icon">👁</span>
+                        </button>
+                    </div>
+                </label>
 
-                <div class="form-error" id="loginError"></div>
+                <p class="auth-error" id="loginError" aria-live="polite"></p>
 
-                <button class="btn full" type="submit">Увійти</button>
+                <button class="btn btn-primary btn-primary--wide" type="submit">
+                    Увійти
+                </button>
             </form>
 
             <!-- Форма реєстрації -->
-            <form id="formSignup" class="auth-form" hidden>
-                <h4>Реєстрація</h4>
+            <form id="formSignup" class="auth-card" hidden>
+                <p class="auth-card__hint">
+                    Створіть акаунт, щоб зберігати вподобання
+                    та отримати вітальні Tammy-бали.
+                </p>
 
-                <div class="field">
-                    <label for="signupName">Ім’я</label>
+                <label class="field" for="signupName">
+                    <span class="field__label">Ім’я</span>
                     <input id="signupName" type="text" name="name"
                            placeholder="Ваше ім’я" required />
-                </div>
+                </label>
 
-                <div class="field">
-                    <label for="signupEmail">Email</label>
+                <label class="field" for="signupEmail">
+                    <span class="field__label">Email</span>
                     <input id="signupEmail" type="email" name="email"
                            placeholder="email@example.com" required />
-                </div>
+                </label>
 
-                <div class="field password-field">
-                    <label for="signupPassword">Пароль</label>
-                    <input id="signupPassword" type="password" name="password"
-                           placeholder="Мінімум 8 символів" required minlength="8" />
-                    <button type="button" class="password-toggle"
-                            aria-label="Показати пароль">👁</button>
-                </div>
+                <label class="field password-field" for="signupPassword">
+                    <span class="field__label">Пароль</span>
+                    <div class="field__with-icon">
+                        <input id="signupPassword" type="password" name="password"
+                               placeholder="Мінімум 8 символів"
+                               required minlength="8" />
+                        <!-- одне «око» -->
+                        <button type="button"
+                                class="password-toggle"
+                                aria-label="Показати пароль">
+                            <span class="password-toggle__icon">👁</span>
+                        </button>
+                    </div>
+                </label>
 
-                <div class="form-error" id="signupError"></div>
+                <p class="auth-error" id="signupError" aria-live="polite"></p>
 
-                <button class="btn full" type="submit">Створити акаунт</button>
+                <button class="btn btn-primary btn-primary--wide" type="submit">
+                    Створити акаунт
+                </button>
             </form>
         </div>
-    </div>
+    </section>
 
-
-    <!-- Вид для авторизованого користувача -->
+    <!-- ======= АВТОРИЗОВАНИЙ КОРИСТУВАЧ ======= -->
     <div class="user-view" id="userView" hidden>
         <nav class="user-tabs">
             <button class="tab is-active" data-tab="profile">Профіль</button>
@@ -731,41 +795,138 @@
         </nav>
 
         <div class="tab-panels">
+            <!-- Профіль -->
             <div class="panel" data-panel="profile">
-                <p><b>Ім’я:</b> <span data-field="name"></span></p>
-                <p><b>Email:</b> <span data-field="email"></span></p>
-                <button id="btnLogout" class="btn ghost">Вийти</button>
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <span class="profile-avatar__initial user-avatar__initial">U</span>
+                    </div>
+                    <div class="profile-main">
+                        <div class="profile-main__row">
+                            <h3 class="profile-name" data-field="name">Користувач</h3>
+                            <span class="profile-badge">Онлайн</span>
+                        </div>
+                        <p class="profile-email" data-field="email">email@example.com</p>
+                    </div>
+                </div>
+
+                <ul class="profile-stats">
+                    <li>
+                        <span class="profile-stats__label">Збережені рецепти</span>
+                        <span class="profile-stats__value" id="profileFavCount">0</span>
+                    </li>
+                    <li>
+                        <span class="profile-stats__label">Замовлення</span>
+                        <span class="profile-stats__value" id="profileOrderCount">0</span>
+                    </li>
+                    <li>
+                        <span class="profile-stats__label">Tammy-бали</span>
+                        <span class="profile-stats__value" id="profilePointsBrief">0</span>
+                    </li>
+                </ul>
+
+                <button id="btnLogout" class="btn btn-outline btn-outline--danger logout-btn">
+                    <span>Вийти з акаунту</span>
+                    <span class="logout-icon">↩</span>
+                </button>
             </div>
 
+            <!-- Вподобання -->
             <div class="panel" data-panel="prefs" hidden>
-                <h3 class="panel-title">Збережені рецепти з конструктора</h3>
+                <h3 class="panel-title">Вподобані страви</h3>
                 <p class="panel-sub">
-                    Тут з’являться страви, які ви збережете в конструкторі через кнопку
-                    «Зберегти рецепт у вподобання».
+                    Тут з’являються рецепти, які ви зберегли в конструкторі
+                    через кнопку «Зберегти рецепт у вподобання».
                 </p>
 
                 <div id="savedRecipesList" class="saved-list"></div>
             </div>
 
-
+            <!-- Замовлення -->
             <div class="panel" data-panel="orders" hidden>
-                <p>Останні замовлення (демо): поки порожньо.</p>
+                <h3 class="panel-title">Останні замовлення</h3>
+                <p class="panel-sub">
+                    Переглядайте історію оформлених замовлень Tammy Food.
+                </p>
+                <div id="ordersList" class="saved-list"></div>
             </div>
 
+            <!-- Бали -->
             <div class="panel" data-panel="points" hidden>
-                <p>Ваші бали: <b>125🍅</b> (демо)</p>
+                <div class="points-header">
+                    <button class="points-pill" id="pointsBadge" type="button">
+                        <span class="points-pill__icon">🎁</span>
+                        <span id="pointsValue">0</span>
+                        <span>балів</span>
+                    </button>
+                    <p class="points-caption">
+                        Натисніть на бейдж, щоб побачити, як працюють Tammy-бали.
+                    </p>
+                </div>
+
+                <!-- інструкція відкривається по кліку на бейдж -->
+                <div id="pointsFaq" class="points-faq" hidden>
+                    <h4>Як заробляти бали?</h4>
+                    <ul>
+                        <li><b>+125 балів</b> — вітальний бонус за реєстрацію.</li>
+                        <li><b>+5 балів</b> — за кожен збережений рецепт з конструктора.</li>
+                        <li><b>1 бал за 10 ₴</b> — за оплачені замовлення.</li>
+                    </ul>
+                    <h4>Як витрачати?</h4>
+                    <ul>
+                        <li>Оплата частини замовлення балами.</li>
+                        <li>Спеціальні страви або напої за бали.</li>
+                    </ul>
+                </div>
+
+                <h4 class="points-history-title">Історія балів</h4>
+                <div id="pointsHistory" class="points-history"></div>
             </div>
 
+            <!-- Налаштування -->
             <div class="panel" data-panel="settings" hidden>
-                <label><input type="checkbox" id="toggleDark"> Темна тема (демо)</label>
+                <h3 class="panel-title">Налаштування</h3>
+                <p class="panel-sub">
+                    Персоналізуйте вигляд Tammy Food під себе.
+                </p>
+
+                <div class="settings-card">
+                    <h4>Тема</h4>
+                    <label class="switch-row">
+                        <input type="checkbox" id="toggleDark">
+                        <span class="switch-faux"></span>
+                        <span class="switch-label">Темна тема</span>
+                    </label>
+                </div>
+
+                <div class="settings-card">
+                    <h4>Повідомлення</h4>
+                    <label class="switch-row">
+                        <input type="checkbox" id="toggleEmailNews">
+                        <span class="switch-faux"></span>
+                        <span class="switch-label">Отримувати акційні email-розсилки</span>
+                    </label>
+                </div>
+
+                <div class="settings-card settings-card--danger">
+                    <h4>Дані пристрою</h4>
+                    <p class="settings-note">
+                        Очистити кешовані вподобання, замовлення та локальні налаштування
+                        на цьому пристрої.
+                    </p>
+                    <button id="btnClearDemo"
+                            class="btn btn-outline btn-outline--danger">
+                        Очистити локальні дані
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </aside>
 
-
-<!-- Затемнення для панелі -->
+<!-- Затемнення -->
 <div class="scrim" id="scrim" hidden></div>
+
 
 <!-- Libs -->
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

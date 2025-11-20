@@ -99,12 +99,14 @@ a{ color:inherit; text-decoration:none; }
 }
 
 /* кнопки */
+/* кнопки */
 .hero__actions{
     display:flex;
     align-items:center;
     gap:18px;
     margin-top:6px;
 }
+
 .btn{
     display:inline-flex;
     align-items:center;
@@ -118,29 +120,150 @@ a{ color:inherit; text-decoration:none; }
     transition:all .3s ease;
     cursor:pointer;
 }
-.btn-primary{ background:var(--brand); color:#fff; }
-.btn-primary:hover{ background:#5c0f2b; }
 
-/* оновлена More Information */
-.btn-ghost {
-    background: rgba(255,240,242,.9);
-    color: var(--brand);
-    border: 2px solid var(--brand);
-    font-size: 15px;        /* було 17px */
-    font-weight: 500;       /* було 600 */
-    padding: 12px 24px;     /* було 14px 28px */
-    border-radius: 13px;    /* було 16px */
-    transition: all .3s ease;
+/* базова primary для всіх кнопок на сайті */
+.btn-primary{
+    background:var(--brand);
+    color:#fff;
+}
+.btn-primary:hover{
+    background:#5c0f2b;
 }
 
-.btn-ghost:hover{ background:var(--brand); color:#fff; }
+/* базова ghost-кнопка (використовується і в інших секціях) */
+.btn-ghost{
+    background:rgba(255,240,242,.9);
+    color:var(--brand);
+    border:2px solid var(--brand);
+    font-size:15.5px;
+    font-weight:500;
+    padding:12px 30px;
+    border-radius:999px;
+    box-shadow:0 10px 24px rgba(115,21,54,0.12);
+    transition:all .35s ease;
+}
+.btn-ghost:hover{
+    background:var(--brand);
+    color:#fff;
+    transform:translateY(-3px);
+    box-shadow:0 20px 34px rgba(115,21,54,0.30);
+}
+
+/* кружок “play” всередині ghost-кнопки */
 .play{
-    display:inline-grid; place-items:center;
-    width:24px; height:24px; border-radius:50%;
-    border:2px solid currentColor; font-size:12px;
+    display:inline-grid;
+    place-items:center;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:2px solid currentColor;
+    font-size:12px;
+    transition:.3s ease;
 }
-.btn-ghost:hover .play{ border-color:#fff; color:#fff; }
+.btn-ghost:hover .play{
+    border-color:#fff;
+    color:#fff;
+}
 
+/* --- HERO-СТИЛІ СУПЕР КРАСИВІ --- */
+
+/* тільки головна кнопка в hero має пульсацію і сильну тінь */
+/* === HERO BUTTONS – нові кольори + glow === */
+
+/* головна кнопка: теплий градієнт, неон по краю */
+.hero-btn-primary{
+    background: linear-gradient(135deg, #731536, #B85C6E);
+    color:#fff;
+    border-radius:26px;
+    padding:14px 34px;
+    box-shadow:0 8px 16px rgba(115,21,54,.55);
+    transform:translateY(0);
+    letter-spacing:.3px;
+    animation:pulseHero 2.6s ease-in-out infinite;
+    border:none;
+}
+
+.hero-btn-primary:hover{
+    background: linear-gradient(1deg, #B85C6E, #E07A86);
+    transform:translateY(1px) scale(.06);
+    box-shadow:
+            0 10px 22px rgba(115,21,54,.80),
+            0 0 0 2px rgba(255,240,242,.95); /* неоновий outline у кольорі паперу */
+}
+
+/* друга кнопка: біла таблетка з теплим акцентом */
+.hero-btn-ghost{
+    background:#FFF0F2;                 /* var(--paper) */
+    color:#4B1424;                      /* не чорний, а темно-бордовий */
+    border:2px solid #B85C6E;
+    border-radius:999px;
+    padding:10px 30px;
+    font-size:15.5px;
+    font-weight:500;
+    box-shadow:0 10px 22px rgba(115,21,54,.25);
+    transition:all .35s ease;
+    display:inline-flex;
+    align-items:center;
+}
+
+/* градієнтний фон + неоновий контур при hover */
+.hero-btn-ghost:hover{
+    background:linear-gradient(135deg,#FFF5F8,#FFE6EF);
+    color:#2A0C16;
+    transform:translateY(-3px);
+    box-shadow:
+            0 18px 32px rgba(115,21,54,.40),
+            0 0 0 2px rgba(184,92,110,.95);
+}
+
+/* кружечок play + анімація */
+.hero-btn-ghost .play{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:2px solid currentColor;
+    display:inline-grid;
+    place-items:center;
+    font-size:12px;
+    margin-right:8px;
+    transition:.3s ease;
+    animation:pulsePlay 2.2s ease-in-out infinite;
+}
+
+.hero-btn-ghost:hover .play{
+    border-color:#2A0C16;
+}
+
+
+/* плавна поява кнопок знизу */
+
+/* легка пульсація всієї primary-кнопки */
+@keyframes pulseHero{
+    0%   { transform:translateY(0) scale(1); }
+    50%  { transform:translateY(-2px) scale(1.03); }
+    100% { transform:translateY(0) scale(1); }
+}
+.hero__actions a{
+    animation:fadeUp .7s ease forwards;
+    opacity:0;
+}
+.hero__actions a:nth-child(1){ animation-delay:.15s; }
+.hero__actions a:nth-child(2){ animation-delay:.30s; }
+
+/* анімація для ▶ – м’який рух + підстрибування */
+@keyframes pulsePlay{
+    0%   { transform:scale(1) translateX(0); opacity:1; }
+    30%  { transform:scale(1.15) translateX(2px); opacity:1; }
+    60%  { transform:scale(1) translateX(0); opacity:0.9; }
+    100% { transform:scale(1) translateX(0); opacity:1; }
+}
+
+@keyframes fadeUp{
+    0%   { opacity:0; transform:translateY(14px); }
+    100% { opacity:1; transform:translateY(0); }
+}
+
+/* далі йде твій код */
 /* тарілка + візуал */
 .hero__visual{
     position:relative;
@@ -149,6 +272,7 @@ a{ color:inherit; text-decoration:none; }
     padding-bottom:0px;
     z-index: 0;
 }
+
 .plate{
     position: relative; z-index: 1;
     width:min(520px,90%);
@@ -778,13 +902,12 @@ a{ color:inherit; text-decoration:none; }
     content:""; position:absolute; width:120px; height:120px; opacity:0.08; pointer-events:none;
     background-repeat:no-repeat; background-size:contain;
 }
-.builder-section::before{ top:-60px; left:-40px; background-image:url('img/decor/leaf.svg'); }
-.builder-section::after{ bottom:-50px; right:-30px; background-image:url('img/decor/splash.svg'); }
 
 .tab-icon{ width:18px; margin-right:6px; vertical-align:middle; }
 .builder-header h1{ font-size:42px; font-weight:700; text-align:center; }
 .builder-header p{ text-align:center; color:#555; margin-bottom:40px; }
 
+/* --- контейнер конструктора --- */
 .builder-container{
     display:flex;
     gap:60px;              /* можна: gap: clamp(40px, 6vw, 60px); */
@@ -798,7 +921,166 @@ a{ color:inherit; text-decoration:none; }
 .preview-panel .composition{ margin-top:18px; }
 .preview-panel .composition h4{ margin:10px 0 6px; color:#3C3C3C; }
 .preview-panel .composition ul{ margin:0; padding-left:18px; color:#333; }
-.preview-actions{ display:flex; gap:10px; margin-top:14px; }
+
+/* =========================
+   КНОПКИ: Замовити + Очистити
+   ========================= */
+.builder-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 20px;
+    flex-wrap: nowrap; /* завжди в 1 рядку */
+}
+
+/* обидві кнопки одного розміру по ширині */
+.builder-actions .builder-checkout,
+.builder-actions .preview-clear{
+    flex: 1;
+}
+
+/* --- КНОПКА "ЗАМОВИТИ" --- */
+.builder-checkout{
+    margin-top:0;
+    width:auto;
+    border-radius:26px;
+    font-size:16px;
+    padding:12px 22px;
+    box-shadow:0 10px 24px rgba(115,21,54,0.25);
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+
+    background:linear-gradient(135deg,#731536,#B42154);
+    color:#FFFFFF;
+    font-weight:700;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    transition:
+            transform .18s ease,
+            box-shadow .2s ease,
+            background .25s ease;
+}
+
+/* якщо додаси всередину <span class="checkout-label-sub">...</span> */
+.checkout-label-sub{
+    font-size:11px;
+    opacity:.9;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+}
+
+/* блиск по кнопці */
+.builder-checkout::before{
+    content:"";
+    position:absolute;
+    top:-40%;
+    left:-40%;
+    width:80%;
+    height:180%;
+    background:linear-gradient(120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.55) 45%,
+    rgba(255,255,255,0) 100%);
+    transform:translateX(-130%) rotate(10deg);
+    opacity:0;
+    pointer-events:none;
+}
+
+@keyframes checkoutShine{
+    0%{ transform:translateX(-130%) rotate(10deg); opacity:0; }
+    30%{ opacity:1; }
+    100%{ transform:translateX(150%) rotate(10deg); opacity:0; }
+}
+
+.preview-panel .builder-checkout:hover,
+.builder-checkout:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 30px rgba(115,21,54,0.32);
+}
+
+.builder-checkout:hover::before{
+    animation:checkoutShine .9s ease-out;
+}
+
+/* --- КНОПКА "ОЧИСТИТИ" --- */
+.preview-clear {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content:center;
+    gap: 6px;
+
+    padding: 12px 20px;
+    border-radius: 26px;
+
+    border: 1px solid rgba(115,21,54,0.25);
+    background: #ffffff;
+    color: #731536;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition:
+            transform .16s ease,
+            box-shadow .2s ease,
+            background .2s ease,
+            border-color .2s ease;
+}
+
+.preview-clear .clear-icon {
+    font-size: 16px;
+    display: inline-block;
+    transition: transform .28s ease;
+}
+
+/* ховер: легкий підйом і “змітання” іконки */
+.preview-clear:hover {
+    background: #fff6fa;
+    border-color: rgba(115,21,54,0.45);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    transform: translateY(-1px);
+}
+
+.preview-clear:hover .clear-icon {
+    transform: translateX(-2px) rotate(-12deg);
+}
+
+/* клік / active */
+.preview-clear:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+/* фокусне кільце */
+.preview-clear:focus-visible {
+    outline: none;
+    box-shadow:
+            0 0 0 2px #ffffff,
+            0 0 0 4px rgba(115,21,54,0.55);
+}
+
+/* невеликий “імпульс” рамки час від часу */
+@keyframes clearPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.0); }
+    40%  { box-shadow: 0 0 0 4px rgba(255,255,255,0.9); }
+    100% { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+}
+
+/* раз на кілька секунд, щоб не дратувало */
+.preview-clear {
+    animation: clearPulse 3s ease-out infinite;
+    animation-delay: 1.2s;
+}
+
+/* =========================
+   ІНШІ ТВОЇ СТИЛІ (без змін)
+   ========================= */
+
 .btn-save{ background:#731536; color:#fff; }
 .btn-save:hover{ background:#5C0F28; }
 .btn-share{ background:#F6E7EB; color:#731536; border:1px solid #E8CCD3; }
@@ -852,23 +1134,70 @@ a{ color:inherit; text-decoration:none; }
     box-shadow:inset 0 0 0 2px var(--brand);
 }
 .tab-icon{ width:18px; height:18px; object-fit:contain; }
+
 /* Surprise button */
 .preview-panel .random-btn{
-    display:block;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
     width:100%;
-    padding:14px 18px;
+    padding:12px 18px;
     margin-top:12px;
+
     border:none;
-    border-radius:12px;
-    background:#000;
-    color:#fff;
-    font-weight:700;
-    font-size:16px;
+    border-radius:999px;
+
+    background:linear-gradient(135deg,#111111,#4a4a4a);
+    color:#ffffff;
+    font-weight:600;
+    font-size:15px;
     cursor:pointer;
-    transition:transform .15s ease, box-shadow .25s ease, opacity .2s ease;
+
+    transition:
+            transform .16s ease,
+            box-shadow .25s ease,
+            background .25s ease,
+            opacity .2s ease;
 }
-.preview-panel .random-btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(0,0,0,.18); }
-.preview-panel .random-btn:active{ transform:translateY(0); opacity:.9; }
+
+.preview-panel .random-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+    background:linear-gradient(135deg,#181818,#333333);
+}
+
+.preview-panel .random-btn:active{
+    transform:translateY(0);
+    opacity:.9;
+}
+
+/* кубік */
+.random-dice{
+    font-size:18px;
+    display:inline-block;
+}
+
+/* анімація стрибка і обертання */
+.random-btn.is-rolling .random-dice{
+    animation:diceJumpSpin .6s ease-out;
+}
+
+@keyframes diceJumpSpin{
+    0%{
+        transform:translateY(0) rotate(0deg);
+    }
+    30%{
+        transform:translateY(-8px) rotate(90deg);
+    }
+    60%{
+        transform:translateY(0) rotate(180deg);
+    }
+    100%{
+        transform:translateY(-3px) rotate(360deg);
+    }
+}
 
 /* Бейдж-лічильник усередині чіпа */
 .tab-count{
@@ -904,6 +1233,7 @@ a{ color:inherit; text-decoration:none; }
 .ingredient-card.selected{ border-color:#731536; box-shadow:0 0 10px rgba(115,21,54,.20); animation:pulse .3s ease; }
 .ingredient-card img{ width:100%; height:90px; object-fit:cover; border-radius:10px; }
 .ingredient-card:hover{ transform:translateY(-5px); box-shadow:0 6px 18px rgba(115,21,54,0.15); }
+
 @keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(115,21,54,.4);} 100%{ box-shadow:0 0 0 12px rgba(115,21,54,0);} }
 
 @media (max-width:992px){
@@ -2536,11 +2866,13 @@ main{
     }
 }
 
+
+
 /* ============================================================
-   USER BUTTON (у хедері)
-/* ============================================================
-   ТРИГЕР-КНОПКА В ХЕДЕРІ
+   OFF-CANVAS USER PANEL + SCRIM
    ============================================================ */
+
+/* Кнопка в хедері */
 .user-btn{
     display:inline-flex;
     align-items:center;
@@ -2550,7 +2882,7 @@ main{
     border-radius:10px;
     border:1.5px solid #E8CCD3;
     background:#fff;
-    color:#731536;
+    color:var(--brand);
     cursor:pointer;
     transition:.2s ease;
 }
@@ -2569,24 +2901,17 @@ main{
     border-radius:999px;
     font-size:12px;
     font-weight:800;
-    background:#731536;
+    background:var(--brand);
     color:#fff;
 }
-/* коли користувач увійшов – показуємо лише ініціали */
 .user-btn.is-auth{
-    border-color:#731536;
+    border-color:var(--brand);
     background:#FFF0F2;
 }
-.user-btn.is-auth .user-icon{
-    display:none;
-}
-.user-btn.is-auth .user-initial{
-    display:inline-grid;
-}
+.user-btn.is-auth .user-icon{ display:none; }
+.user-btn.is-auth .user-initial{ display:inline-grid; }
 
-/* ============================================================
-   OFF-CANVAS USER PANEL + SCRIM
-   ============================================================ */
+/* ====== PANEL ====== */
 [hidden]{ display:none !important; }
 
 .scrim{
@@ -2602,9 +2927,9 @@ main{
     top:0;
     right:0;
     height:100dvh;
-    width:min(420px, 92vw);
+    width:min(420px,92vw);
     background:#fff;
-    color:#0F0F0F;
+    color:var(--text);
     border-left:1px solid #EEE;
     box-shadow:-14px 0 34px rgba(0,0,0,.14);
     z-index:1400;
@@ -2612,11 +2937,8 @@ main{
     transition:transform .28s cubic-bezier(.2,.7,.2,1);
     display:flex;
     flex-direction:column;
-    will-change:transform;
 }
-.user-panel.is-open{
-    transform:translateX(0);
-}
+.user-panel.is-open{ transform:translateX(0); }
 
 .user-panel__head{
     display:flex;
@@ -2631,22 +2953,15 @@ main{
     border-radius:10px;
     display:grid;
     place-items:center;
-    background:#FFF0F2;
+    background:var(--paper);
     border:1px solid #E8CCD3;
-    color:#731536;
+    color:var(--brand);
     font-weight:800;
 }
-.user-panel__meta{
-    flex:1 1 auto;
-    min-width:0;
-}
-.user-name{
-    font-weight:700;
-}
-.user-email{
-    color:#667085;
-    font-size:12px;
-}
+.user-panel__meta{ flex:1 1 auto; min-width:0; }
+.user-name{ font-weight:700; }
+.user-email{ color:var(--muted); font-size:12px; }
+
 .user-panel__close{
     margin-left:auto;
     width:34px;
@@ -2658,9 +2973,7 @@ main{
     background:#fff;
     cursor:pointer;
 }
-.user-panel__close:hover{
-    background:#FFF7F9;
-}
+.user-panel__close:hover{ background:#FFF7F9; }
 
 .user-view,
 .guest-view{
@@ -2668,71 +2981,147 @@ main{
     overflow:auto;
 }
 
-/* ============================================================
-   GUEST VIEW (login / signup)
-   ============================================================ */
-.guest-text{
-    margin:0 0 10px;
-    color:#667085;
+/* ====== GUEST VIEW (герой + кнопки) ====== */
+.user-hero{
+    margin-bottom:12px;
+}
+.user-hero__title{
+    margin:0 0 4px;
+    font-size:20px;
+    font-weight:700;
+}
+.user-hero__subtitle{
+    margin:0 0 12px;
     font-size:13px;
+    color:var(--muted);
 }
-.guest-note{
-    font-size:12px;
-    color:#8b7380;
-    margin:4px 0 10px;
+
+/* орбіта з «тарілкою» */
+.user-hero__orbit{
+    position:relative;
+    width:120px;
+    height:120px;
+    margin:6px 0 4px;
+    border-radius:999px;
+    border:1px dashed #F0BECF;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    animation:orbitPulse 4s infinite ease-in-out;
 }
+.orbit-center{
+    width:64px;
+    height:64px;
+    border-radius:999px;
+    background:var(--brand);
+    display:grid;
+    place-items:center;
+    box-shadow:0 12px 22px rgba(115,21,54,.35);
+}
+.orbit-center__icon{
+    font-size:26px;
+    transform:translateY(1px);
+}
+.orbit-dot{
+    position:absolute;
+    width:14px;
+    height:14px;
+    border-radius:999px;
+    background:#FFF0F2;
+    border:1px solid #E8CCD3;
+}
+.orbit-dot--1{ top:10px; left:20px; animation:orbitDot1 6s infinite linear; }
+.orbit-dot--2{ top:18px; right:12px; animation:orbitDot2 7s infinite linear; }
+.orbit-dot--3{ bottom:8px; left:40px; animation:orbitDot3 5.5s infinite linear; }
+
+@keyframes orbitPulse{
+    0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(115,21,54,.0);}
+    40%{ transform:scale(1.03); box-shadow:0 8px 16px rgba(115,21,54,.22);}
+}
+@keyframes orbitDot1{
+    0%{ transform:translate(0,0); }
+    50%{ transform:translate(8px,4px); }
+    100%{ transform:translate(0,0); }
+}
+@keyframes orbitDot2{
+    0%{ transform:translate(0,0); }
+    50%{ transform:translate(-6px,6px); }
+    100%{ transform:translate(0,0); }
+}
+@keyframes orbitDot3{
+    0%{ transform:translate(0,0); }
+    50%{ transform:translate(6px,-4px); }
+    100%{ transform:translate(0,0); }
+}
+
 .guest-actions{
+    margin:6px 0 4px;
+    transition:opacity .22s ease, transform .22s ease, height .22s ease;
+}
+.guest-actions__buttons{
     display:flex;
     gap:8px;
-    margin:8px 0 4px;
 }
-.guest-actions .btn{
+.btn-pill{
     flex:1;
     padding:10px 0;
     border-radius:999px;
     border:1px solid #E8CCD3;
     background:#FFF0F2;
-    color:#731536;
+    color:var(--brand);
     font-weight:600;
     font-size:14px;
+    cursor:pointer;
+    transition:.18s ease;
 }
-.guest-actions .btn.is-selected{
-    background:#731536;
+.btn-pill.is-selected{
+    background:var(--brand);
     color:#fff;
+    box-shadow:0 6px 16px rgba(115,21,54,.28);
+    transform:translateY(-1px);
 }
-.guest-actions .btn.full{
-    flex:1;
+.btn-pill:hover{
+    background:#ffe6ee;
 }
-.guest-actions .btn.full.ghost{
-    background:#FFF0F2;
-    color:#731536;
-    border:1px solid #E8CCD3;
+.guest-actions.is-collapsed{
+    opacity:0;
+    transform:translateY(-6px);
+    pointer-events:none;
+}
+.guest-note{
+    font-size:12px;
+    color:#8b7380;
+    margin:4px 0 6px;
 }
 .guest-forms{
-    margin-top:8px;
+    margin-top:4px;
 }
 
-/* ============================================================
-   LOGIN / SIGNUP FORMS
-   ============================================================ */
-.auth-form{
-    margin:8px 0 14px;
-    padding:12px;
+/* ====== FORMS (auth-card) ====== */
+.auth-card{
+    margin:6px 0 10px;
+    padding:12px 12px 12px;
     border:1px solid #EEE;
-    border-radius:12px;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 10px 24px rgba(15,15,15,.04);
 }
-.auth-form h4{
+.auth-card__hint{
     margin:0 0 10px;
+    font-size:13px;
+    color:var(--muted);
 }
-.auth-field{
-    margin:6px 0;
-}
-.auth-form label{
+
+.field{ margin:6px 0 10px; }
+.field__label{
     display:block;
     font-size:13px;
     margin-bottom:4px;
 }
-.auth-form input{
+.field__with-icon{
+    position:relative;
+}
+.auth-card input{
     width:100%;
     margin:0;
     padding:10px 12px;
@@ -2740,28 +3129,14 @@ main{
     border-radius:10px;
     font-size:14px;
 }
-.auth-form .btn.full{
-    width:100%;
-    margin-top:8px;
-    padding:12px 14px;
-    background:#731536;
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    font-weight:700;
-    cursor:pointer;
-}
-.auth-form .btn.full:hover{
-    background:#5c0f2b;
+.auth-card input:focus{
+    outline:2px solid var(--brand);
+    outline-offset:1px;
+    border-color:var(--brand);
 }
 
-/* пароль + кнопка "око" */
-.password-field{
-    position:relative;
-}
-.password-field input{
-    padding-right:40px;
-}
+/* пароль + одне «око» */
+.password-field input{ padding-right:40px; }
 .password-toggle{
     position:absolute;
     right:10px;
@@ -2773,31 +3148,56 @@ main{
     font-size:14px;
     opacity:.55;
 }
-.password-toggle.is-active{
-    opacity:1;
-}
+.password-toggle__icon{ pointer-events:none; }
+.password-toggle.is-active{ opacity:1; }
 
-.auth-field .hint{
-    display:block;
-    margin-top:2px;
-    font-size:11px;
-    color:#999;
-}
 .auth-error{
-    margin-top:4px;
-    font-size:13px;
-    color:#b3261e;
-}
-.form-error{
     min-height:16px;
     margin:2px 0 0;
     font-size:12px;
     color:#D92D20;
 }
 
-/* ============================================================
-   TABS
-   ============================================================ */
+.btn-primary{
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:10px 16px;
+    transition:.18s ease;
+}
+.btn-primary--wide{
+    width:100%;
+    margin-top:6px;
+    padding:12px 14px;
+}
+.btn-primary:hover{
+    background:#5c0f2b;
+    box-shadow:0 8px 18px rgba(115,21,54,.3);
+    transform:translateY(-1px);
+}
+
+.btn-outline{
+    background:#fff;
+    border-radius:999px;
+    border:1px solid #E8CCD3;
+    padding:9px 14px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+}
+.btn-outline--danger{
+    color:#B42318;
+    border-color:#F4B1A8;
+}
+
+/* ====== TABS ====== */
 .user-tabs{
     display:flex;
     gap:8px;
@@ -2824,56 +3224,112 @@ main{
     box-shadow:inset 0 0 0 2px var(--brand);
 }
 
-/* панелі вкладок */
 .tab-panels .panel{
     padding:6px 2px 2px;
 }
 
-/* ============================================================
-   PREFS / SETTINGS / BUTTONS
-   ============================================================ */
-#formPrefs label{
-    display:block;
-    margin:8px 0;
-    font-size:14px;
+/* ====== Профіль ====== */
+.profile-header{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:10px;
 }
-#formPrefs select,
-#formPrefs input[type="text"],
-#formPrefs input[type="number"]{
-    width:100%;
-    margin-top:6px;
-    padding:10px 12px;
-    border:1px solid #E6E6E6;
-    border-radius:10px;
-}
-#formPrefs .row{
+.profile-avatar{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    border:1px solid #E8CCD3;
+    background:var(--paper);
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
+    place-items:center;
+}
+.profile-avatar__initial{
+    font-weight:800;
+    color:#fff;
+    background:var(--brand);
+    width:30px;
+    height:30px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+}
+.profile-main__row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:2px;
+}
+.profile-name{
+    margin:0;
+    font-size:17px;
+    text-transform:lowercase;
+}
+.profile-badge{
+    padding:3px 8px;
+    border-radius:999px;
+    background:#E6FAF5;
+    color:#067647;
+    font-size:11px;
+    font-weight:600;
+}
+.profile-email{
+    margin:0;
+    font-size:13px;
+    color:var(--muted);
+}
+.profile-stats{
+    list-style:none;
+    margin:10px 0 0;
+    padding:0;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+}
+.profile-stats li{
+    border:1px solid #EEE;
+    border-radius:12px;
+    padding:8px 8px;
+    background:#fff;
+    text-align:left;
+}
+.profile-stats__label{
+    display:block;
+    font-size:11px;
+    color:var(--muted);
+}
+.profile-stats__value{
+    display:block;
+    margin-top:2px;
+    font-weight:700;
+    font-size:15px;
 }
 
-.btn.ghost,
-#btnLogout.btn.ghost{
-    background:#F6E7EB;
-    color:#731536;
+/* LOGOUT BUTTON */
+.logout-btn{
+    margin-top:16px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:999px;
     border:1px solid #E8CCD3;
-    border-radius:10px;
-    padding:10px 14px;
-}
-#btnLogout.btn.ghost:hover{
-    background:#ffeef2;
-}
-
-/* маленький хелпер для дрібних бейджів всередині панелі */
-.user-panel .pill{
     background:#FFF0F2;
-    color:#731536;
-    border:1px solid #E8CCD3;
+    color:var(--brand);
+    font-weight:600;
+    cursor:pointer;
+    transition:.18s ease;
+}
+.logout-btn .logout-icon{
+    display:inline-block;
+    transform:rotate(180deg);
+}
+.logout-btn:hover{
+    background:#ffe6ee;
+    transform:translateY(-1px);
 }
 
-/* ============================================================
-   ВПОДОБАННЯ / ЗБЕРЕЖЕНІ РЕЦЕПТИ
-   ============================================================ */
+/* ====== PREFS / ORDERS ====== */
 .panel-title{
     margin:0 0 6px;
     font-size:18px;
@@ -2881,7 +3337,7 @@ main{
 .panel-sub{
     margin:0 0 10px;
     font-size:13px;
-    color:#667085;
+    color:var(--muted);
 }
 .saved-list{
     display:flex;
@@ -2893,7 +3349,6 @@ main{
     border:1px solid #EEE;
     border-radius:12px;
     padding:12px;
-    margin-bottom:10px;
     background:#fff;
 }
 .saved-top{
@@ -2902,12 +3357,16 @@ main{
     align-items:center;
     gap:10px;
 }
+.saved-title{
+    font-weight:600;
+}
 .saved-meta{
     display:flex;
     gap:16px;
-    color:#667085;
+    color:var(--muted);
     font-size:13px;
     margin:4px 0 6px;
+    flex-wrap:wrap;
 }
 .saved-ings{
     color:#3C3C3C;
@@ -2926,28 +3385,148 @@ main{
     border:1px dashed #E8CCD3;
 }
 
-/* ============================================================
-   POINTS BADGE
-   ============================================================ */
-.points-badge{
+/* ====== POINTS (новий бейдж + FAQ) ====== */
+.points-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+}
+.points-pill{
     display:inline-flex;
     align-items:center;
     gap:6px;
     background:#FFF0F2;
     border:1px solid #E8CCD3;
-    color:#731536;
-    padding:4px 10px;
+    color:var(--brand);
+    padding:6px 12px;
     border-radius:999px;
     font-weight:700;
     font-size:14px;
+    cursor:pointer;
+    transition:.15s ease;
 }
-.points-badge i{
-    font-style:normal;
+.points-pill__icon{
+    font-size:18px;
+}
+.points-pill:hover{
+    background:#ffe6ee;
+    transform:translateY(-1px);
+    box-shadow:0 6px 14px rgba(115,21,54,.18);
+}
+.points-caption{
+    font-size:12px;
+    color:var(--muted);
+}
+.points-faq{
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px dashed #E8CCD3;
+    background:#FFF7F9;
+    font-size:13px;
+    margin-bottom:10px;
+}
+.points-faq h4{
+    margin:4px 0 4px;
+    font-size:14px;
+}
+.points-faq ul{
+    margin:0 0 6px 18px;
+    padding:0;
+}
+.points-history-title{
+    margin:8px 0 4px;
+    font-size:14px;
+}
+.points-history{
+    margin-top:4px;
+    font-size:12px;
+    border-top:1px dashed #E8CCD3;
+    padding-top:6px;
+}
+.points-history-item{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:4px;
 }
 
-/* ============================================================
-   DARK THEME (за класом .theme-dark на <html>)
-   ============================================================ */
+/* ====== SETTINGS (нові картки + свічі) ====== */
+.settings-card{
+    border-radius:14px;
+    border:1px solid #EEE;
+    padding:10px 12px;
+    background:#fff;
+    margin-bottom:10px;
+}
+.settings-card--danger{
+    border-color:#F4B1A8;
+    background:#FFF5F3;
+}
+.settings-card h4{
+    margin:0 0 4px;
+    font-size:14px;
+}
+.settings-note{
+    margin:0 0 8px;
+    font-size:12px;
+    color:var(--muted);
+}
+
+.switch-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    font-size:13px;
+}
+.switch-row input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+.switch-faux{
+    width:34px;
+    height:20px;
+    border-radius:999px;
+    background:#E4E4E7;
+    position:relative;
+    flex:0 0 auto;
+    transition:.18s ease;
+}
+.switch-faux::after{
+    content:"";
+    position:absolute;
+    top:2px;
+    left:3px;
+    width:16px;
+    height:16px;
+    border-radius:999px;
+    background:#fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25);
+    transition:.18s ease;
+}
+.switch-row input:checked + .switch-faux{
+    background:var(--brand);
+}
+.switch-row input:checked + .switch-faux::after{
+    transform:translateX(12px);
+}
+.switch-label{
+    font-size:13px;
+}
+
+/* маленька сіра кнопка очищення */
+.btn.ghost.small{
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid #E8CCD3;
+    background:#FFF7F9;
+    color:var(--brand);
+    font-size:13px;
+}
+
+/* ====== DARK THEME ====== */
 .theme-dark body{
     background:#0e0e10;
     color:#f1f1f1;
@@ -2958,12 +3537,8 @@ main{
     border-left-color:#1e1e22;
     box-shadow:-14px 0 34px rgba(0,0,0,.5);
 }
-.theme-dark .user-panel__head{
-    border-bottom-color:#1e1e22;
-}
-.theme-dark .user-tabs{
-    background:#141416;
-}
+.theme-dark .user-panel__head{ border-bottom-color:#1e1e22; }
+.theme-dark .user-tabs{ background:#141416; }
 .theme-dark .user-tabs .tab{
     background:#141416;
     border-color:#2a1a20;
@@ -2974,46 +3549,28 @@ main{
     color:#ffceda;
     box-shadow:inset 0 0 0 2px #b54e60;
 }
-
-.theme-dark .guest-text,
-.theme-dark .guest-note{
-    color:#a0a0b8;
-}
-.theme-dark .auth-form{
+.theme-dark .user-hero__subtitle,
+.theme-dark .guest-note{ color:#a0a0b8; }
+.theme-dark .auth-card{
     background:#151518;
     border-color:#232327;
     color:#eee;
 }
-.theme-dark .auth-form input,
-.theme-dark #formPrefs input,
-.theme-dark #formPrefs select{
+.theme-dark .auth-card input{
     background:#0f0f12;
     border-color:#2a2a30;
     color:#e8e8e8;
 }
-.theme-dark .auth-error{
-    color:#ffb4ab;
-}
-.theme-dark .guest-actions .btn.full.ghost{
-    background:#24161a;
-    border-color:#2a1a20;
-    color:#ffceda;
-}
-
-.theme-dark .ai-chef__prefs,
-.theme-dark .ai-chef__result,
-.theme-dark .preview-panel{
+.theme-dark .profile-stats li{
     background:#151518;
     border-color:#232327;
-    color:#eee;
 }
-
-.theme-dark .btn.full,
-.theme-dark .btn-primary{
-    background:#b54e60;
+.theme-dark .settings-card{
+    background:#151518;
+    border-color:#232327;
 }
-.theme-dark .btn.full:hover,
-.theme-dark .btn-primary:hover{
-    background:#9b3f4f;
+.theme-dark .points-pill{
+    background:#24161a;
+    border-color:#2a1a20;
 }
 
