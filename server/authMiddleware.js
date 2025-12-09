@@ -8,7 +8,7 @@ export function requireAuth(req, res, next) {
     const [, token] = auth.split(" ");
 
     if (!token) {
-        return res.status(401).json({ error: "Необхідна авторизація." });
+        return res.status(401).json({ error: "Authorization required." });
     }
 
     try {
@@ -16,6 +16,6 @@ export function requireAuth(req, res, next) {
         req.user = { id: payload.id, email: payload.email };
         next();
     } catch (err) {
-        return res.status(401).json({ error: "Недійсний токен." });
+        return res.status(401).json({ error: "Invalid token." });
     }
 }

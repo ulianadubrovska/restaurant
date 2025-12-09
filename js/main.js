@@ -6,6 +6,11 @@
 let data;
 let div_num;
 let main_page;
+// === Tammy points global state ===
+let currentUserEmail = null;      // оновлюється після /api/user/me
+let currentPointsBalance = 0;     // реальний баланс з бекенду
+let pointsToUse = 0;              // скільки користувач хоче списати
+const DELIVERY_FEE = 0;         // повинно співпадати з бекендом
 
 const num = (v) => (isFinite(parseFloat(v)) ? parseFloat(v) : 0);
 const css = (el, name, fb = 0) => getComputedStyle(el).getPropertyValue(name) || fb;
@@ -44,9 +49,10 @@ function getCurrentUserEmail() {
 }
 
 /* ============================================================
-   1) ГОЛОВНА / HERO / ШАПКА
+   1) MAIN / HERO / HEADER
    ============================================================ */
 AOS.init();
+
 // Back to top
 jQuery(function () {
     jQuery(window).scroll(function () {
@@ -57,6 +63,7 @@ jQuery(function () {
         return false;
     });
 });
+
 // Cart open
 document.addEventListener("click", (e) => {
     const a = e.target.closest("a.cart");
@@ -65,7 +72,7 @@ document.addEventListener("click", (e) => {
     openCart();
 });
 
-// HERO: легка пульсація кнопки
+// HERO: subtle pulsing button
 (function () {
     const btn = document.querySelector(".hero .btn.btn-primary");
     if (!btn) return;
@@ -78,7 +85,7 @@ document.addEventListener("click", (e) => {
     }, 4000);
 })();
 
-// HERO: падіння інгредієнтів і поява страви (як було) ...
+// HERO: falling ingredients and dish reveal
 (function () {
     const EASE_FALL = "cubic-bezier(.25,.8,.3,1)";
     const D_FALL = 2200;
@@ -172,12 +179,13 @@ document.addEventListener("click", (e) => {
 })();
 
 /* ============================================================
-   2) MENU: завантаження, рендер, пагінація, рейтинг
+   2) MENU: loading, rendering, pagination, rating
    ============================================================ */
+
 fetch("/api/dishes")
     .then((response) => response.json())
     .then((json) => {
-        data = json;              // структура така сама { dish: [...] }
+        data = json; // structure stays { dish: [...] }
         const menuBlock = document.getElementById("menuParent");
         const newArr = data.dish.map((item) => item);
 
@@ -185,7 +193,7 @@ fetch("/api/dishes")
             menuBlock.insertAdjacentHTML("beforeend", renderDishItem(item, index + 1));
         });
 
-
+        // Flip animation
         menuBlock.addEventListener("click", (e) => {
             const btn = e.target.closest("button, a");
             if (btn) return;
@@ -194,6 +202,7 @@ fetch("/api/dishes")
             card.classList.toggle("flipped");
         });
 
+        // Add to cart buttons
         document.querySelectorAll(".button-shop-1").forEach((button, btnIndex) => {
             button.classList.add("add-to-cart");
             button.setAttribute("data-index", String(btnIndex));
@@ -207,7 +216,7 @@ fetch("/api/dishes")
                 addToCart({
                     id: dish.id ?? btnIndex,
                     title: dish.title,
-                    price: dish.price,
+                    unitPrice: Number(dish.price),
                     image: `img/photo/menu/${dish.photo}.${dish.typePhoto}`,
                     description: dish.back?.short || dish.back?.long || ""
                 });
@@ -215,7 +224,6 @@ fetch("/api/dishes")
                 openCart();
             });
         });
-
 
         const count = newArr.length;
         const itemsPerPage = 8;
@@ -238,21 +246,24 @@ fetch("/api/dishes")
     })
     .catch((err) => console.error("Menu load error:", err));
 
+
+// ========== CARD TEMPLATE ==========
 function renderDishItem(item, itemId) {
-    const {  id, title, price, stars, photo, typePhoto, back } = item;
-    const grams  = back?.grams ?? null;        // для страв
-    const volume = back?.volume_ml ?? null;    // для вин/напоїв
-    // рейтинг (беремо з localStorage, як і було)
+    const { id, title, price, stars, photo, typePhoto, back } = item;
+    const grams  = back?.grams ?? null;
+    const volume = back?.volume_ml ?? null;
+
+    // rating (from localStorage)
     const saved = (JSON.parse(localStorage.getItem("ratings") || "{}"))[title] || 0;
     const starsHTML = [...Array(5)]
         .map((_, i) => {
             const n = i + 1;
             const active = n <= saved ? "is-active" : "";
-            return `<button class="star ${active}" data-value="${n}" aria-label="${n} з 5" title="${n}/5">★</button>`;
+            return `<button class="star ${active}" data-value="${n}" aria-label="${n} out of 5" title="${n}/5">★</button>`;
         })
         .join("");
 
-    // задня сторона: довгий опис + інгредієнти (працює і якщо back відсутній)
+    // Back side
     const longText = back?.long || "";
     const ingredientsList = Array.isArray(back?.ingredients) ? back.ingredients : [];
     const ingredientsHTML = ingredientsList.length
@@ -262,26 +273,31 @@ function renderDishItem(item, itemId) {
     return `
   <div data-num="${itemId}" class="num menu-block" aria-label="${title}" role="button">
     <div class="menu-card__inner">
+
       <!-- FRONT -->
       <div class="menu-card__front">
         <div class="dish">
           <img height="130" src="img/photo/menu/${photo}.${typePhoto}" alt="${title}">
         </div>
-        <div class="rating-stars" role="radiogroup" aria-label="Оцініть страву" data-title="${title}" data-dish-id="${id}">
+
+        <div class="rating-stars" role="radiogroup" aria-label="Rate the dish" data-title="${title}" data-dish-id="${id}">
           ${starsHTML}
         </div>
+
         <p class="dish-title">${title}</p>
+
 <div class="menu-card__actions">
   <div class="price-chip">$${price}</div>
 
   <div class="menu-actions-right">
-    <button class="share-btn" data-index="${itemId - 1}" aria-label="Поділитися «${title}»">
+
+    <button class="share-btn" data-index="${itemId - 1}" aria-label="Share «${title}»">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
         <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a2.5 2.5 0 0 0 0-1.39l7.05-4.11a2.5 2.5 0 1 0-.84-1.47L8.07 9.84a2.5 2.5 0 1 0 0 4.32l7.05 4.11c.41.91 1.33 1.55 2.38 1.55 1.5 0 2.72-1.22 2.72-2.72S19.5 16.08 18 16.08z"/>
       </svg>
     </button>
 
-    <button class="button-shop-1 add-to-cart" data-index="${itemId - 1}" aria-label="Додати «${title}» у кошик">
+    <button class="button-shop-1 add-to-cart" data-index="${itemId - 1}" aria-label="Add «${title}» to cart">
       <svg class="cart-ic" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="currentColor"
           d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0
@@ -292,30 +308,30 @@ function renderDishItem(item, itemId) {
            -1.35 2.45A2 2 0 0 0 8 18h10v-2H8l1-2z"/>
       </svg>
     </button>
+
   </div>
 </div>
-
-
-
 
       </div>
 
       <!-- BACK -->
-       <div class="menu-card__back" aria-hidden="true">
+      <div class="menu-card__back" aria-hidden="true">
         <h4>${title}</h4>
         ${grams || volume ? `<div class="weight-pill">${grams ? `${grams} g` : `${volume} ml`}</div>` : ""}
         ${longText ? `<p class="menu-card__long">${longText}</p>` : ""}
         ${ingredientsHTML}
         <div class="menu-card__price">
           <span class="price-chip">$${price}</span>
-          <span class="menu-card__hint">Натисни, щоб повернути</span>
+          <span class="menu-card__hint">Tap to flip back</span>
         </div>
       </div>
+
     </div>
   </div>`;
 }
 
-// Share dish (delegation on menu grid)
+
+// ======= SHARE FEATURE =======
 document.getElementById("menuParent")?.addEventListener("click", (e) => {
     const shareBtn = e.target.closest(".share-btn");
     if (!shareBtn) return;
@@ -327,30 +343,29 @@ document.getElementById("menuParent")?.addEventListener("click", (e) => {
 
     shareDish(dish);
 });
+
 function shareDish(dish) {
-    // грами тепер беремо з back.grams
-    const grams = dish.back?.grams ? ` • ${dish.back.grams} г` : "";
+    const grams = dish.back?.grams ? ` • ${dish.back.grams} g` : "";
     const desc  = dish.desc ? `\n${dish.desc}` : "";
 
     const url   = location.origin + location.pathname + "#menu";
-    const text  = `Дивись страву в Tammy Food:\n${dish.title}${grams} — $${(+dish.price).toFixed(2)}${desc}\n${url}`;
+    const text  = `Check out this dish on Tammy Food:\n${dish.title}${grams} — $${(+dish.price).toFixed(2)}${desc}\n${url}`;
 
     if (navigator.share) {
         navigator.share({
             title: dish.title,
             text,
             url
-        }).catch(() => {
-            // юзер міг відмінити – це ок
-        });
+        }).catch(() => {});
     } else {
         navigator.clipboard?.writeText(text)
-            .then(() => alert("Текст для поширення скопійовано ✨"))
+            .then(() => alert("Share text copied ✨"))
             .catch(() => alert(text));
     }
 }
 
 
+// ======= PAGINATOR =======
 function buildPaginator(totalPages) {
     const paginator = document.getElementById("paginator");
     paginator.innerHTML = "";
@@ -365,6 +380,7 @@ function buildPaginator(totalPages) {
         paginator.appendChild(li);
     }
 }
+
 function changePage(direction) {
     const current = main_page ? parseInt(main_page.id.replace("page", ""), 10) : 1;
     const count = div_num.length;
@@ -375,6 +391,7 @@ function changePage(direction) {
     if (newPage > totalPages) newPage = totalPages;
     goToPage(newPage);
 }
+
 function goToPage(pageNum) {
     main_page?.classList.remove("paginator_active");
     main_page = document.getElementById(`page${pageNum}`);
@@ -390,7 +407,8 @@ function goToPage(pageNum) {
     });
 }
 
-// Rating
+
+// ======= RATING =======
 function initRatings() {
     document.querySelectorAll(".rating-stars").forEach((group) => {
         const stars = group.querySelectorAll(".star");
@@ -424,13 +442,11 @@ function initRatings() {
 }
 
 function saveRating(title, value, dishId) {
-    // локальне збереження — як було
     const ratings = JSON.parse(localStorage.getItem("ratings") || "{}");
     ratings[title] = value;
     localStorage.setItem("ratings", JSON.stringify(ratings));
 
-    // відправка в бекенд
-    if (!dishId) return; // якщо чомусь немає id
+    if (!dishId) return;
 
     const userEmail = getCurrentUserEmail();
     const userHash =
@@ -450,42 +466,110 @@ function saveRating(title, value, dishId) {
             userEmail: userEmail || null,
             userHash
         })
-    }).catch(() => {
-        // якщо щось пішло не так – просто мовчки ігноруємо
-    });
+    }).catch(() => {});
 }
 
 function highlightStars(stars, value) {
     stars.forEach((st) => st.classList.toggle("is-active", +st.dataset.value <= value));
 }
-
-
 /* ============================================================
    3) КОШИК
    ============================================================ */
 // ===== Кошик =====
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let cart = [];
+loadCartFromStorage();
 
-function uaInstrumental(noun) {
-    const map = {
-        "Лосось": "лососем",
-        "Курка": "куркою",
-        "Тунець": "тунцем",
-        "Індичка": "індичкою",
-        "Яловичина": "яловичиною",
-        "Свинина": "свининою",
-        "Креветки": "креветками",
-        "Тофу": "тофу",
-        "Квасоля": "квасолею",
-        "Яйце": "яйцем",
-        "Мідії": "мідіями",
-        "Восьминіг": "восьминогом"
-    };
-    return map[noun] || noun.toLowerCase();
+function getCartStorageKey() {
+    const email = getCurrentUserEmail();
+    return email ? `cart_${email}` : "cart_guest";
 }
 
-// dish: { id, title, price, image, description }
+function loadCartFromStorage() {
+    try {
+        const key = getCartStorageKey();
+        cart = JSON.parse(localStorage.getItem(key) || "[]");
+    } catch {
+        cart = [];
+    }
+}
+
+function saveCartToStorage() {
+    const key = getCartStorageKey();
+    localStorage.setItem(key, JSON.stringify(cart));
+}
+function loadCart() {
+    // Підтягуємо кошик з localStorage для поточного юзера
+    loadCartFromStorage();
+    return cart;
+}
+
+function updateQuantity(idx, delta) {
+    const item = cart[idx];
+    if (!item) return;
+
+    const newQty = (item.quantity || 1) + delta;
+
+    if (newQty <= 0) {
+        // видаляємо позицію, якщо кількість стає 0
+        cart.splice(idx, 1);
+    } else {
+        item.quantity = newQty;
+    }
+
+    saveCartToStorage();
+    updateCartDisplay();
+    updateCartModal();
+}
+
+/**
+ * Перерахує суми з урахуванням введених Tammy points
+ * і оновить DOM (subtotal, delivery, discount, total)
+ */
+function updateCartTotals() {
+    const inputEl = document.getElementById("cartPointsUse");
+    const currentCart = loadCart();
+
+    // рахуємо subtotal
+    const subtotal = currentCart.reduce((s, c) => {
+        const unit = Number(
+            c.unitPrice !== undefined ? c.unitPrice : c.price || 0
+        );
+        const qty = Number(c.quantity || 1);
+        return s + unit * qty;
+    }, 0);
+// доставки немає – працюємо тільки з сумою страв
+    const totalBeforeDiscount = subtotal;
+
+    const available = currentPointsBalance || 0;
+
+    let raw = inputEl ? Number(inputEl.value) : 0;
+    if (!isFinite(raw) || raw < 0) raw = 0;
+    raw = Math.floor(raw);
+
+    // не більше балансу
+    if (raw > available) raw = available;
+    // і не більше загальної суми
+    if (raw > totalBeforeDiscount) raw = Math.floor(totalBeforeDiscount);
+
+    pointsToUse = raw;
+    if (inputEl) inputEl.value = String(pointsToUse);
+
+    // тепер просто оновлюємо модалку з новими pointsToUse
+    updateCartModal();
+}
+
+// допоміжне: корінь модалки кошика
+function getCartRoot() {
+    return document.getElementById("cart-modal");
+}
+
+// dish: { id, title, price | unitPrice, image, description }
 function addToCart(dish) {
+    // нормалізуємо ціну в одне поле
+    const unitPrice = Number(
+        dish.unitPrice !== undefined ? dish.unitPrice : dish.price || 0
+    );
+
     const existing = cart.find((item) => item.title === dish.title);
 
     if (existing) {
@@ -493,13 +577,15 @@ function addToCart(dish) {
     } else {
         cart.push({
             ...dish,
+            unitPrice,            // основна ціна за одиницю
+            price: unitPrice,     // лишаємо для сумісності
             quantity: 1
         });
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    saveCartToStorage();
     updateCartDisplay();
-    updateCartModal(); // якщо модалка відкрита – одразу оновиться
+    updateCartModal();
 }
 
 function updateCartDisplay() {
@@ -509,234 +595,370 @@ function updateCartDisplay() {
 }
 
 function openCart() {
-    const cartModal = document.getElementById("cart-modal");
-    cartModal.classList.add("active");
+    const cartModal = getCartRoot();
+    if (!cartModal) return; // щоб не падало, якщо id не збігся
+    // додаємо декілька класів, щоб попасти в будь-який варіант CSS
+    cartModal.classList.add("active", "open", "is-open");
     updateCartModal();
 }
 
 function closeCart() {
-    const cartModal = document.getElementById("cart-modal");
-    cartModal.classList.remove("active");
+    const cartModal = getCartRoot();
+    if (!cartModal) return;
+    cartModal.classList.remove("active", "open", "is-open");
 }
 
 function updateCartModal() {
-    const list = document.getElementById("cart-items");
-    const counter = document.getElementById("cart-items-count");
-    const subtotalEl = document.getElementById("cart-subtotal");
-    const deliveryEl = document.getElementById("cart-delivery");
-    const totalEl = document.getElementById("cart-total");
+    const listEl       = document.getElementById("cart-items");
+    const subtotalEl   = document.getElementById("cart-subtotal");
+    // у новому HTML може НЕ бути cart-delivery – це ок
+    const deliveryEl   = document.getElementById("cart-delivery");
+    const discountEl   = document.getElementById("cart-discount");
+    const totalEl      = document.getElementById("cart-total");
+    const countEl      = document.getElementById("cart-items-count");
 
-    list.innerHTML = "";
+    if (!listEl) return;
 
-    if (!cart.length) {
-        list.insertAdjacentHTML(
-            "beforeend",
-            `<li class="cart-empty">Ваш кошик порожній. Додайте щось смачненьке 😋</li>`
-        );
-        counter.textContent = "0 items";
-        subtotalEl.textContent = "$0.00";
-        deliveryEl.textContent = "$0.00";
-        totalEl.textContent = "$0.00";
-        return;
-    }
-
+    listEl.innerHTML = "";
     let subtotal = 0;
-    const totalCount = cart.reduce((acc, i) => acc + (i.quantity || 0), 0);
+    let count    = 0;
 
-    cart.forEach((item, index) => {
-        const qty = item.quantity || 1;
-        const unitPrice = parseFloat(item.price);
-        const itemTotal = unitPrice * qty;
-        subtotal += itemTotal;
-
-        const imgSrc = item.image || "img/ingredients/dish-ready.png";
-
-        list.insertAdjacentHTML(
-            "beforeend",
-            `
-            <li class="cart-item">
-                <div class="cart-thumb">
-                    <img src="${imgSrc}" alt="${item.title}">
-                </div>
-                <div class="cart-main">
-                    <div class="cart-title-row">
-                        <h4 class="cart-item-title">${item.title}</h4>
-                        <button class="cart-remove" onclick="removeItem(${index})" aria-label="Remove">×</button>
-                    </div>
-                    ${
-                item.description
-                    ? `<p class="cart-item-desc">${item.description}</p>`
-                    : ""
-            }
-                    <div class="cart-bottom-row">
-                        <div class="cart-price">
-                            <span class="cart-price-each">$${unitPrice.toFixed(2)}</span>
-                            <span class="cart-multiply">×</span>
-                            <span class="cart-qty">${qty}</span>
-                            <span class="cart-item-total">$${itemTotal.toFixed(2)}</span>
-                        </div>
-                        <div class="quantity-controls">
-                            <button class="qty-btn" onclick="updateQuantity(${index}, -1)">−</button>
-                            <span class="quantity">${qty}</span>
-                            <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            `
-        );
-    });
-
-    const delivery = 2.5; // просто фіксована доставка для краси
-    const total = subtotal + delivery;
-
-    counter.textContent = `${totalCount} item${totalCount === 1 ? "" : "s"}`;
-    subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-    deliveryEl.textContent = `$${delivery.toFixed(2)}`;
-    totalEl.textContent = `$${total.toFixed(2)}`;
-}
-
-function updateQuantity(index, change) {
-    const item = cart[index];
-    if (!item) return;
-
-    const next = (item.quantity || 1) + change;
-    if (next > 0) {
-        item.quantity = next;
-    } else {
-        cart.splice(index, 1);
-    }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartModal();
-    updateCartDisplay();
-}
-
-function removeItem(index) {
-    cart.splice(index, 1);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartModal();
-    updateCartDisplay();
-}
-
-async function placeOrder() {
     if (!cart.length) {
-        alert("Ваш кошик порожній!");
-        return;
+        listEl.innerHTML = `<li class="cart-empty">
+            Your cart is empty. Add something tasty 🍝
+        </li>`;
     }
 
-    const userEmail = getCurrentUserEmail();
+    cart.forEach((item, idx) => {
+        const unit = Number(
+            item.unitPrice !== undefined ? item.unitPrice : item.price || 0
+        );
+        const qty = Number(item.quantity || 1);
+        const lineTotal = unit * qty;
 
-    const itemsPayload = cart.map((item) => {
-        const qty = item.quantity || 1;
-        const price = parseFloat(item.price) || 0;
+        subtotal += lineTotal;
+        count    += qty;
+        const isAi = item.ai || String(item.id || "").startsWith("ai-");
 
-        // якщо id — число → це блюдо з меню (dish_id)
-        const dishId = typeof item.id === "number" ? item.id : null;
+        const isBuilderDish =
+            item.isBuilder ||
+            !!item.builderId ||
+            String(item.id || "").startsWith("builder-") ||
+            String(item.title || "").startsWith("Chef’s Custom Dish");
 
-        // на майбутнє: якщо коли-небудь будеш зберігати builder_id, можна додати поле item.builderId
-        const builderId = item.builderId || null;
+        const photoHtml = (!isBuilderDish && item.image)
+            ? `<div class="cart-thumb"><img src="${item.image}" alt="${item.title}"></div>`
+            : "";
 
-        return {
-            dishId,
-            builderId,
-            title: item.title,
-            unitPrice: price,
-            quantity: qty
-        };
-    });
+        const builderIngredientsHtml =
+            isBuilderDish && Array.isArray(item.ingredients) && item.ingredients.length
+                ? `
+        <p class="cart-builder-line"
+           title="${item.ingredients.join(', ')}">
+            <span class="cart-builder-label-text">Your ingredients:</span>
+            ${item.ingredients.join(", ")}
+        </p>`
+                : "";
 
-    try {
-        const resp = await fetch(`${API_BASE}/api/orders`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userEmail: userEmail || null,
-                items: itemsPayload
-            })
-        });
 
-        if (!resp.ok) {
-            throw new Error("HTTP " + resp.status);
+
+        const li = document.createElement("li");
+        li.className =
+            "cart-item" +
+            ((isAi || !item.image || isBuilderDish) ? " no-photo" : "") +
+            (isAi ? " ai-dish" : "");
+
+        li.innerHTML = `
+        ${photoHtml}
+        <div class="cart-main">
+            <div class="cart-title-row">
+                <div class="cart-title-main">
+         <h4 class="cart-item-title">${item.title}</h4>
+${
+            isBuilderDish
+                ? `<span class="cart-builder-tag">BUILDER DISH</span>`
+                : isAi
+                    ? `<span class="cart-ai-tag">AI recipe</span>`
+                    : ""
         }
 
-        const data = await resp.json();
+                </div>
+                <button class="cart-remove" data-idx="${idx}" aria-label="Remove item">×</button>
+            </div>
 
-        alert(`Замовлення оформлено! №${data.orderId}, сума: $${data.total.toFixed(2)}`);
+${
+            item.description && !isBuilderDish
+                ? `<p class="cart-item-desc${isAi ? " cart-ai-desc" : ""}">${item.description}</p>`
+                : ""
+        }
 
-        cart = [];
-        localStorage.setItem("cart", JSON.stringify(cart));
-        updateCartModal();
-        updateCartDisplay();
-        closeCart();
-    } catch (e) {
-        console.error("Order error:", e);
-        alert("Не вдалося оформити замовлення. Спробуйте ще раз пізніше.");
+
+            ${builderIngredientsHtml}
+
+            <div class="cart-bottom-row">
+                <div class="cart-price">
+                    <span class="cart-price-each">$${unit.toFixed(2)}</span>
+                    <span class="cart-multiply">×</span>
+                    <span class="cart-qty">${qty}</span>
+                    <span class="cart-item-total">$${lineTotal.toFixed(2)}</span>
+                </div>
+
+                <div class="quantity-controls">
+                    <button class="qty-btn" data-idx="${idx}" data-delta="-1">−</button>
+                    <span class="quantity">${qty}</span>
+                    <button class="qty-btn" data-idx="${idx}" data-delta="1">+</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        listEl.appendChild(li);
+    });
+
+
+    // клік по "×" — видалити
+    listEl.querySelectorAll(".cart-remove").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const idx = Number(e.currentTarget.dataset.idx);
+            if (isNaN(idx)) return;
+            cart.splice(idx, 1);
+            saveCartToStorage();
+            updateCartDisplay();
+            updateCartModal();
+        });
+    });
+
+    // +/- кількість
+    listEl.querySelectorAll(".qty-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const idx   = Number(e.currentTarget.dataset.idx);
+            const delta = Number(e.currentTarget.dataset.delta || 0);
+            if (isNaN(idx) || !delta) return;
+            updateQuantity(idx, delta);
+        });
+    });
+
+// доставки немає – рахуємо тільки страви
+    const delivery = 0;
+// доставки немає – рахуємо тільки страви
+    const totalBeforeDiscount = subtotal;
+
+// Tammy points
+    const available = currentPointsBalance || 0;
+    if (pointsToUse > available) pointsToUse = available;
+    if (pointsToUse > totalBeforeDiscount) {
+        pointsToUse = Math.floor(totalBeforeDiscount);
+    }
+    if (!cart.length) pointsToUse = 0;
+
+    const discount   = pointsToUse;
+    const finalTotal = Math.max(0, totalBeforeDiscount - discount);
+
+    if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+
+// ховаємо рядок "Delivery", якщо він є в розмітці
+    if (deliveryEl) {
+        deliveryEl.textContent = "$0.00";
+        const row = deliveryEl.closest(".cart-summary-row, li, tr");
+        if (row) row.style.display = "none";
+    }
+
+    if (discountEl) discountEl.textContent = discount ? `-$${discount.toFixed(2)}` : "-$0.00";
+    if (totalEl)    totalEl.textContent    = `$${finalTotal.toFixed(2)}`;
+
+    if (countEl)    countEl.textContent    = `${count} items`;
+
+    const balEl   = document.getElementById("cartPointsBalance");
+    const useEl   = document.getElementById("cartPointsUse");
+    const infoEl  = document.getElementById("cartPointsInfo");
+
+    if (balEl) balEl.textContent = available;
+    if (useEl) useEl.value       = pointsToUse;
+
+    // підказка про те, скільки балів отримає
+    const expectedPoints = Math.floor(subtotal / 10);
+    if (infoEl) {
+        if (!cart.length) {
+            infoEl.textContent = "";
+        } else if (!currentUserEmail) {
+            infoEl.textContent =
+                `Log in or create an account to earn approximately ${expectedPoints} Tammy points for this order.`;
+        } else if (expectedPoints > 0) {
+            infoEl.textContent =
+                `You will earn approximately ${expectedPoints} Tammy points for this order.`;
+        } else {
+            infoEl.textContent =
+                "Order total is too small to earn new points.";
+        }
     }
 }
 
 
-// щоб працювали onclick у HTML
-window.openCart = openCart;
-window.closeCart = closeCart;
-window.updateQuantity = updateQuantity;
-window.removeItem = removeItem;
-window.placeOrder = placeOrder;
-window.addToCart = addToCart;
+// input «Use points»
+document.getElementById("cartPointsUse")?.addEventListener("input", () => {
+    updateCartTotals();
+});
 
-// поруч з іншими addEventListener у “Builder”
-// Делегування кліку по кнопці "Замовити"
-document.addEventListener("click", (e) => {
-    const btn = e.target.closest("#builderCheckout");
-    if (!btn) return;
+// кнопка «Use max»
+document.getElementById("cartPointsMax")?.addEventListener("click", () => {
+    const cart = loadCart();
+    const subtotal = cart.reduce((s, c) => s + c.unitPrice * c.quantity, 0);
+    const maxUse = Math.min(currentPointsBalance || 0, Math.floor(subtotal));
+    const inputEl = document.getElementById("cartPointsUse");
+    if (!inputEl) return;
+    inputEl.value = String(maxUse);
+    updateCartTotals();
+});
 
-    const all = Object.values(picked).flat();
-    if (!all.length) {
-        alert("Додайте інгредієнти у конструктор 🤏");
+// checkout – тепер як глобальна функція placeOrder(), бо в HTML onclick="placeOrder()"
+async function placeOrder() {
+    const userEmail = getCurrentUserEmail();
+    const cart = loadCart();
+
+    if (!cart.length) {
+        alert("Your cart is empty.");
         return;
     }
 
-    const totals   = sumSelected(all);
-    const baseName = picked.base[0]?.name || "Страва";
-    const protInst = picked.protein[0]?.name ? uaInstrumental(picked.protein[0].name) : "";
-    const orderName= protInst ? `${baseName} з ${protInst}` : baseName;
+    const body = {
+        userEmail: userEmail || null,
+        pointsToUse,
+        items: cart.map((c) => ({
+            dishId:    c.id || null,
+            builderId: c.builderId || null,
+            title:     c.title,
+            unitPrice: c.unitPrice,
+            quantity:  c.quantity,
+        })),
+    };
 
-    const compositionText = all.map(x => x.name).join(", ");
+    try {
+        const res = await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
 
-    addToCart({
-        id: `builder-${Date.now()}`,
-        title: `Конструктор: ${orderName}`,
-        price: totals.price.toFixed(2),
-        image: "img/ingredients/dish-ready.png", // будь-яке гарне фото
-        description: `Індивідуальна страва з конструктора. Склад: ${compositionText}.`
-    });
+        const json = await res.json();
 
-    openCart();
-});
+        if (!json.ok) {
+            alert("Order failed. Please try again.");
+            return;
+        }
+
+        const earned = json.earnedPoints || 0;
+        const used   = json.pointsUsed || 0;
+        const newBal = json.pointsBalance ?? "";
+
+        let msg = `Order placed successfully! 🎉\nYour order ID: #${json.orderId}\n\n`;
+        if (used > 0)   msg += `Used ${used} points.\n`;
+        if (earned > 0) msg += `Earned ${earned} new points.\n`;
+        if (newBal !== "") msg += `Your new balance: ${newBal} points.\n`;
+
+        alert(msg);
+
+        // очищаємо кошик саме для поточного юзера
+        localStorage.removeItem(getCartStorageKey());
+        cart.length = 0; // чистимо in-memory
+        pointsToUse = 0;
+        updateCartDisplay();
+        updateCartModal();
+        closeCart();
+    } catch (err) {
+        console.error("Order error:", err);
+        alert("An error occurred. Please try again later.");
+    }
+}
 
 
 
+// Close cart
+document.getElementById("cartClose")?.addEventListener("click", closeCart);
+
+function uaInstrumental(word) {
+    let w = (word || "").trim();
+    if (!w) return "";
+
+    // Якщо слово англійське – нічого не змінюємо.
+    if (/[a-z]/i.test(w) && !/[а-яіїєґ]/i.test(w)) {
+        return w;
+    }
+
+    const lower = w.toLowerCase();
+
+    // Декілька ручних винятків (як у старій версії)
+    const special = {
+        "лосось": "лососем",
+        "курка": "куркою",
+        "індичка": "індичкою",
+        "яловичина": "яловичиною",
+        "свинина": "свининою",
+        "креветки": "креветками",
+        "квасоля": "квасолею",
+        "тофу": "тофу",
+    };
+    if (special[lower]) {
+        const res = special[lower];
+        return w[0] === w[0].toUpperCase()
+            ? res[0].toUpperCase() + res.slice(1)
+            : res;
+    }
+
+    // Прості правила для укр. слів
+    let res = lower;
+
+    if (lower.endsWith("ка")) {
+        res = lower.slice(0, -2) + "кою";
+    } else if (lower.endsWith("а")) {
+        res = lower.slice(0, -1) + "ою";
+    } else if (lower.endsWith("я")) {
+        res = lower.slice(0, -1) + "ею";
+    } else if (lower.endsWith("ь")) {
+        res = lower.slice(0, -1) + "ем";
+    } else {
+        res = lower + "ом";
+    }
+
+    return w[0] === w[0].toUpperCase()
+        ? res[0].toUpperCase() + res.slice(1)
+        : res;
+}
 
 /* ============================================================
-   4) HOW IT WORKS: анімація ліній (без змін)
-   ============================================================ */
-
-
-/* ============================================================
-   5) КОНСТРУКТОР ІНГРЕДІЄНТІВ + підказки
+   5) INGREDIENT BUILDER + HINTS
    ============================================================ */
 let ingredients = {};
 const ingredientList = document.getElementById("ingredient-list");
 
-// === AI / API config (єдиний блок) ===
+// 🔹 Нове:
+let isBuilderBusy = false;
+const MIN_INGR_FOR_RECIPE = 2;
+
+function setBuilderBusy(flag) {
+    isBuilderBusy = flag;
+    const root = document.querySelector(".builder-section") || document.documentElement;
+    if (root) {
+        root.classList.toggle("builder-busy", flag);
+    }
+
+    // 🔹 блокуємо/розблоковуємо кнопку "Get recipe"
+    const btn = document.getElementById("generateRecipeBtn");
+    if (btn) {
+        btn.disabled = flag;
+        btn.classList.toggle("is-loading", flag);
+    }
+}
+
+
+// === AI / API config (single block) ===
 const API_BASE =
     (location.hostname === "localhost" || location.hostname === "127.0.0.1")
         ? "http://localhost:3000"
-        : ""; // прод: той самий домен
+        : ""; // prod: same origin
 
-let aiEnabled = true; // оптимістично: не блокуємо UX
+let aiEnabled = true; // optimistic – do not block UX
 
-// health — лише індикатор, не «рубильник»
+// health — only indicator, not a hard switch
 fetch(`${API_BASE}/api/health`)
     .then(r => r.json())
     .then(d => { aiEnabled = !!d.ai; updateTotalsAndPreview(); })
@@ -754,12 +976,27 @@ async function askBackend(picked, profile = {}) {
     return resp.json();
 }
 
-
-
 const picked = {
     base: [], protein: [], veggies: [],
     sauces: [], herbs: [], drinks: []
 };
+
+// === State for AI recipe (to avoid spamming backend) ===
+let lastRecipeSignature = null;
+let lastRecipeRequestId = 0;
+
+function buildRecipeSignature() {
+    // беремо всі обрані інгредієнти з усіх категорій
+    const names = Object.values(picked)
+        .flat()
+        .map(x => x.name)
+        .filter(Boolean)
+        .sort()
+        .join("|");
+
+    return names;
+}
+
 
 fetch("/api/ingredients")
     .then(res => res.json())
@@ -769,12 +1006,14 @@ fetch("/api/ingredients")
         renderIngredients(ingredients[last] ? last : "base");
 
         const tabs = document.querySelectorAll(".category-tabs .tab");
-        tabs.forEach(t => t.classList.toggle("active", t.dataset.cat === (ingredients[last] ? last : "base")));
+        tabs.forEach(t =>
+            t.classList.toggle("active", t.dataset.cat === (ingredients[last] ? last : "base"))
+        );
 
         updateHints();
         updateTabCounters();
     })
-    .catch(err => console.error("Помилка завантаження ingredients.json:", err));
+    .catch(err => console.error("Ingredients load error:", err));
 
 document.querySelectorAll(".category-tabs .tab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -810,6 +1049,9 @@ function renderIngredients(cat) {
 
     ingredientList.querySelectorAll(".ingredient-card").forEach(card => {
         card.addEventListener("click", () => {
+            // 🔹 Не даємо клікати по інгредієнтах, поки AI рахує
+            if (isBuilderBusy) return;
+
             const name = card.dataset.name;
             const c = card.dataset.cat;
             const item = ingredients[c].find(x => x.name === name);
@@ -822,9 +1064,11 @@ function renderIngredients(cat) {
             updateTabCounters();
             updateCompositionUI();
             updateHints();
-            updateTotalsAndPreview();
+            // 🔹 Тут ми НЕ хочемо постійно дзвонити в AI, тому лишаємо:
+            updateTotalsAndPreview(); // це оновить тільки total + плейсхолдер
         });
     });
+
 }
 
 // chips
@@ -834,7 +1078,7 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// бейджі на табах
+// badges on tabs
 function updateTabCounters() {
     document.querySelectorAll(".category-tabs .tab").forEach(btn => {
         const cat = btn.dataset.cat;
@@ -850,7 +1094,7 @@ function updateTabCounters() {
     });
 }
 
-// склад
+// composition list
 function updateCompositionUI() {
     const ul = document.getElementById("compositionList");
     if (!ul) return;
@@ -858,7 +1102,7 @@ function updateCompositionUI() {
     ul.innerHTML = flat.map(x => `<li>${x.v.name}</li>`).join("");
 }
 
-// підсумки
+// totals
 function sumSelected(arr) {
     return arr.reduce((acc, x) => {
         acc.price += x.price || 0;
@@ -868,9 +1112,11 @@ function sumSelected(arr) {
     }, { price: 0, kcal: 0, names: [] });
 }
 
-// прев’ю + тотали (ASYNC) — ТІЛЬКИ AI
-async function updateTotalsAndPreview() {
-    const all = Object.values(picked).flat();
+// preview + totals (AI only when composition changes)
+async function updateTotalsAndPreview(options = {}) {
+    const { force = false } = options;
+
+    const all    = Object.values(picked).flat();
     const totals = sumSelected(all);
 
     const priceEl = document.getElementById("price");
@@ -881,42 +1127,58 @@ async function updateTotalsAndPreview() {
     const preview = document.getElementById("dishPreview");
     if (!preview) return;
 
-    // якщо нічого не вибрано — покажемо простий плейсхолдер і вийдемо
     if (!all.length) {
+        lastRecipeSignature = null;
         preview.className = "preview-placeholder";
         preview.innerHTML = `
-      <h3>Тут буде ваш рецепт приготування</h3>
-      <p>Додайте інгредієнти — і AI складе опис та спосіб готування.</p>`;
+          <h3>Your cooking recipe will appear here</h3>
+          <p>Add ingredients — and AI will generate description and cooking steps.</p>`;
         return;
     }
 
-    // назва (для випадку, якщо AI не поверне name)
-    const baseName = picked.base[0]?.name || "Страва";
+    // 2) Менше ніж MIN_INGR_FOR_RECIPE → показати текст, але НЕ викликати AI
+    if (all.length < MIN_INGR_FOR_RECIPE && !force) {
+        lastRecipeSignature = null;
+        preview.className = "preview-placeholder";
+        preview.innerHTML = `
+          <h3>Pick at least ${MIN_INGR_FOR_RECIPE} ingredients</h3>
+          <p>Then press “Get recipe” and we’ll prepare cooking instructions for you.</p>`;
+        return;
+    }
+
+    const newSignature = buildRecipeSignature();
+    // Ми все одно зберігаємо сигнатуру, але НЕ блокуємо повторний виклик при force:true
+    lastRecipeSignature = newSignature;
+
+    if (!force) {
+        // автоматичні оновлення (при кліку по інгредієнтах) – без звернення до AI
+        return;
+    }
+
+    const currentReqId  = ++lastRecipeRequestId;
+
+    const baseName = picked.base[0]?.name || "Dish";
     const protInst = picked.protein[0]?.name ? uaInstrumental(picked.protein[0].name) : "";
-    const fallbackName = protInst ? `${baseName} з ${protInst}` : baseName;
+    const fallbackName = protInst ? `${baseName} with ${protInst}` : baseName;
 
-    // якщо AI недоступний — можете або показати повідомлення, або легкий локальний текст (на твій вибір)
-
-
-
-    // 🔄 лоадер-картка (без великого тексту, не «миготить»)
     preview.className = "";
     preview.innerHTML = `
-    <div class="auto-recipe loading">
-      <div class="method-badge shimmer" style="width:140px;height:24px;border-radius:12px;"></div>
-      <div class="method-sub shimmer"   style="width:220px;height:14px;margin-top:6px;border-radius:7px;"></div>
-      <h3 class="shimmer"               style="width:65%;height:28px;margin:12px 0;border-radius:8px;"></h3>
-      <p  class="shimmer"               style="width:80%;height:14px;border-radius:7px;"></p>
-      <p  class="shimmer"               style="width:90%;height:14px;margin-top:8px;border-radius:7px;"></p>
-    </div>`;
+        <div class="auto-recipe loading">
+          <div class="method-badge shimmer" style="width:140px;height:24px;border-radius:12px;"></div>
+          <div class="method-sub shimmer"   style="width:220px;height:14px;margin-top:6px;border-radius:7px;"></div>
+          <h3 class="shimmer"               style="width:65%;height:28px;margin:12px 0;border-radius:8px;"></h3>
+          <p  class="shimmer"               style="width:80%;height:14px;border-radius:7px;"></p>
+          <p  class="shimmer"               style="width:90%;height:14px;border-radius:7px;"></p>
+        </div>`;
 
-    // запит до бекенду з таймаутом
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000); // 15с максимум
+    const timer = setTimeout(() => controller.abort(), 15000);
+
+    setBuilderBusy(true);
 
     try {
         const profile = JSON.parse(localStorage.getItem("tasteProfile") || "{}");
-        const email = getCurrentUserEmail();
+        const email   = getCurrentUserEmail();
 
         const r = await fetch(`${API_BASE}/api/recipe`, {
             method: "POST",
@@ -928,14 +1190,16 @@ async function updateTotalsAndPreview() {
             return x.json();
         });
 
+        if (currentReqId !== lastRecipeRequestId) {
+            return;
+        }
 
         const METHOD_ICON = {
-            "Пательня": "🍳",
-            "Духовка": "🔥",
-            "Гриль":   "🥩",
-            "Вок":     "🥢",
-            "Вок/Пательня": "🥢",
-            "Варіння": "🍲"
+            "Skillet": "🍳",
+            "Oven": "🔥",
+            "Grill": "🥩",
+            "Wok": "🥢",
+            "Boiling": "🍲"
         };
 
         const icon    = METHOD_ICON[r.method] || "🍽️";
@@ -944,30 +1208,56 @@ async function updateTotalsAndPreview() {
         const totalT  = (active + passive) || Number(r.time) || 0;
         const name    = r.name || fallbackName;
         const kcal    = r.kcal || totals.kcal;
-        const story   = (r.story && r.story.length > 30) ? r.story : "Готово! Смачного. 😉";
+        const story   = (r.story && r.story.length > 30)
+            ? r.story
+            : "Done! Enjoy your meal. 😉";
 
         preview.innerHTML = `
-      <div class="auto-recipe">
-        <div class="method-badge"><i>${icon}</i>${r.method || "Пательня"}</div>
-        <div class="method-sub">⌛ Час приготування: ~${totalT} хв</div>
-        <h3>Від шефа: ${name}</h3>
-        <p><b>Разом:</b> $${totals.price.toFixed(2)}, ${kcal} ккал</p>
-        <p class="chef-story">${story}</p>
-      </div>`;
+  <div class="auto-recipe">
+    <div class="method-badge"><i>${icon}</i>${r.method || "Skillet"}</div>
+    <div class="method-sub">⌛ Approx cooking time: ~${totalT} min</div>
+    <h3>From the chef: ${name}</h3>
+    <p class="chef-story">${story}</p>
+  </div>`;
+
     } catch (e) {
-        // м’який фолбек, якщо AI не відповів
+        if (currentReqId !== lastRecipeRequestId) return;
+
         preview.innerHTML = `
-      <div class="auto-recipe">
-        <h3>Від шефа: ${fallbackName}</h3>
-        <p class="chef-story">Не вдалося отримати відповідь від AI. Спробуй ще раз трохи пізніше.</p>
-      </div>`;
+          <div class="auto-recipe">
+            <h3>From the chef: ${fallbackName}</h3>
+            <p class="chef-story">
+              Could not get a response from AI. Please try again a bit later.
+            </p>
+          </div>`;
     } finally {
         clearTimeout(timer);
+        // 🔹 ЯК БИ НЕ ЗАКІНЧИЛОСЬ – знімаємо блокування
+        setBuilderBusy(false);
     }
 }
+document.getElementById("generateRecipeBtn")?.addEventListener("click", () => {
+    const all = Object.values(picked).flat();
+
+    if (all.length < MIN_INGR_FOR_RECIPE) {
+        // показуємо нормальну підказку через aiHint + плейсхолдер, без alert
+        updateHints();
+        updateTotalsAndPreview(); // покаже текст "Pick at least 2 ingredients..." в прев’ю
+
+        // невеликий "потрясти" aiHint, щоб привернути увагу
+        if (aiHintEl) {
+            aiHintEl.classList.add("hint--shake");
+            setTimeout(() => aiHintEl.classList.remove("hint--shake"), 500);
+        }
+        return;
+    }
+
+    // свідомо просимо AI згенерувати рецепт
+    updateTotalsAndPreview({ force: true });
+});
 
 
-/* ================== AI-підказка ================== */
+/* ================== AI HINT ================== */
 async function askHint(picked){
     const resp = await fetch(`${API_BASE}/api/hint`, {
         method: "POST",
@@ -977,7 +1267,6 @@ async function askHint(picked){
     if (!resp.ok) throw new Error("AI hint error");
     return resp.json();
 }
-
 
 const aiHintEl = document.getElementById("aiHint");
 
@@ -989,12 +1278,12 @@ function setHint(el, text, mode = "info") {
     el.style.display = text ? "block" : "none";
 }
 
-// ─── AI hint із таймаутом і без залипання на "Підбираємо…" ───
+// AI hint with timeout and no stuck “loading…”
 const requestAiHint = debounce(async () => {
     if (!aiHintEl) return;
 
     const prevText =
-        aiHintEl.textContent && aiHintEl.textContent !== "Підбираємо підказку…"
+        aiHintEl.textContent && aiHintEl.textContent !== "Picking a tip for you…"
             ? aiHintEl.textContent
             : "";
     const prevMode =
@@ -1002,11 +1291,11 @@ const requestAiHint = debounce(async () => {
             aiHintEl.classList.contains("hint--ok")   ? "ok"   : "info";
 
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 4000); // 4s
+    const t = setTimeout(() => controller.abort(), 4000);
 
     try {
         aiHintEl.style.display = "block";
-        aiHintEl.textContent = "Підбираємо підказку…";
+        aiHintEl.textContent = "Picking a tip for you…";
 
         const email = getCurrentUserEmail();
 
@@ -1016,7 +1305,6 @@ const requestAiHint = debounce(async () => {
             body: JSON.stringify({ picked, userEmail: email || null }),
             signal: controller.signal
         });
-
 
         if (!resp.ok) throw new Error("AI hint error");
         const { hint } = await resp.json();
@@ -1030,8 +1318,6 @@ const requestAiHint = debounce(async () => {
     }
 }, 350);
 
-
-
 function updateHints() {
     if (!aiHintEl) return;
 
@@ -1041,69 +1327,66 @@ function updateHints() {
     const hasSauce  = picked.sauces.length > 0;
     const hasDrink  = picked.drinks.length > 0;
 
-    if (![...Object.values(picked)].some(a => a.length)) {
+    const totalCount = Object.values(picked)
+        .reduce((s, arr) => s + arr.length, 0);
+
+    // нічого не вибрано — ховаємо підказку
+    if (!totalCount) {
         setHint(aiHintEl, "", "info");
         return;
     }
+
     if (!hasBase) {
-        setHint(aiHintEl, "Додайте основу — рис, пасту чи кіноа, щоб стартувати.", "warn");
+        setHint(aiHintEl, "Add a base — rice, pasta or quinoa — to start.", "warn");
         return;
     }
+
+    // 🔹 НОВЕ: правило про мінімум інгредієнтів тепер тут
+    if (totalCount < MIN_INGR_FOR_RECIPE) {
+        setHint(
+            aiHintEl,
+            `Pick at least ${MIN_INGR_FOR_RECIPE} ingredients, then press “Get recipe”.`,
+            "info"
+        );
+        return;
+    }
+
     if (protN === 0) {
-        setHint(aiHintEl, "Додайте 1–2 порції протеїну — курка, лосось, тофу тощо.", "info");
+        setHint(aiHintEl, "Add 1–2 portions of protein — chicken, salmon, tofu, etc.", "info");
         return;
     }
     if (protN > 2) {
-        setHint(aiHintEl, "Забагато протеїну — збалансуйте овочами або приберіть зайве.", "warn");
+        setHint(aiHintEl, "Too much protein — balance with veggies or remove the extra.", "warn");
         return;
     }
     if (!hasVeg) {
-        setHint(aiHintEl, "Додайте овоч або зелень для свіжості й хрумкості.", "info");
-        // якщо вже є база+протеїн — можна звернутися до AI за додатковою порадою
+        setHint(aiHintEl, "Add some vegetables or fresh herbs for color and crunch.", "info");
         requestAiHint();
         return;
     }
     if (!hasSauce) {
-        setHint(aiHintEl, "Додайте соус — він об’єднає смаки та дасть соковитість.", "info");
+        setHint(aiHintEl, "Add a sauce — it will tie all the flavours together.", "info");
         requestAiHint();
         return;
     }
     if (!hasDrink){
-        setHint(aiHintEl, "Для завершення додай напій у пару до страви.", "info");
+        setHint(aiHintEl, "To complete the set, pair your dish with a drink.", "info");
         requestAiHint();
+        return;
     }
-    setHint(aiHintEl, "Чудово! Страва збалансована — можна зберігати рецепт.", "ok");
+    setHint(aiHintEl, "Perfect! Your dish is balanced — you can save the recipe.", "ok");
     requestAiHint();
 }
 
-/* Страва-сюрприз (ліва кнопка зверху, якщо є) */
-document.getElementById('surpriseBtn')?.addEventListener('click', () => {
-    const pickOne = arr => arr.length ? [arr[Math.floor(Math.random() * arr.length)]] : [];
-
-    picked.base    = pickOne(ingredients.base || []);
-    picked.protein = pickOne(ingredients.protein || []);
-    picked.veggies = pickOne(ingredients.veggies || []);
-    picked.drinks  = pickOne(ingredients.drinks || []);   // ← додаємо напій
-    picked.sauces = []; picked.herbs = [];
 
 
-    const active = document.querySelector('.category-tabs .tab.active')?.dataset.cat || 'base';
-    renderIngredients(active);
-    updateTabCounters();
-    updateCompositionUI();
-    updateHints();
-    updateTotalsAndPreview();
-});
-
-/* Кнопка “🎲 Страва-сюрприз” справа у прев’ю */
-/* Кнопка “🎲 Страва-сюрприз” справа у прев’ю */
+/* “🎲 Random dish” button on the preview */
 const rndBtn = document.getElementById("randomDish");
 const rndDice = rndBtn?.querySelector(".random-dice");
 
 rndBtn?.addEventListener("click", async (e) => {
     if (!ingredients.base) return;
 
-    // 🔄 анімація кубика
     if (rndDice) {
         rndBtn.classList.add("is-rolling");
         setTimeout(() => {
@@ -1114,7 +1397,6 @@ rndBtn?.addEventListener("click", async (e) => {
     rndBtn.classList.add("loading");
     rndBtn.disabled = true;
 
-    // твоя логіка “страва-сюрприз” як була
     Object.keys(picked).forEach(k => picked[k] = []);
     const pick1 = arr => arr.length ? [arr[Math.floor(Math.random() * arr.length)]] : [];
     picked.base    = pick1(ingredients.base);
@@ -1131,14 +1413,13 @@ rndBtn?.addEventListener("click", async (e) => {
     updateHints();
 
     await new Promise(r => setTimeout(r, 400));
-    updateTotalsAndPreview();
+    updateTotalsAndPreview({ force: true });
 
     rndBtn.classList.remove("loading");
     rndBtn.disabled = false;
 });
 
-
-/* Навігація табів ← → */
+/* Tabs keyboard navigation ← → */
 (() => {
     const tabs = [...document.querySelectorAll(".category-tabs .tab")];
     if (!tabs.length) return;
@@ -1155,7 +1436,7 @@ rndBtn?.addEventListener("click", async (e) => {
     });
 })();
 
-/* Очистити */
+/* Clear all picked ingredients */
 document.getElementById("clearPicked")?.addEventListener("click", () => {
     Object.keys(picked).forEach(k => picked[k] = []);
     const active = localStorage.getItem("lastCat") || "base";
@@ -1165,100 +1446,25 @@ document.getElementById("clearPicked")?.addEventListener("click", () => {
     updateHints();
     updateTotalsAndPreview();
 });
-/* ===== Збереження рецепта з конструктора у вподобання ===== */
-/* ===== Збереження рецепта з конструктора у вподобання ===== */
-/* ===== Збереження рецепта з конструктора у вподобання (MySQL + fallback) ===== */
 
-// локальний fallback-ключ (на випадок, якщо бекенд недоступний)
-const BUILDER_FAV_KEY = "builderFavorites_fallback";
-
-// helpers тільки для резервного localStorage
-function getBuilderFavoritesLocal() {
-    try {
-        return JSON.parse(localStorage.getItem(BUILDER_FAV_KEY) || "[]");
-    } catch {
-        return [];
-    }
-}
-function saveBuilderFavoritesLocal(list) {
-    localStorage.setItem(BUILDER_FAV_KEY, JSON.stringify(list.slice(0, 50)));
-}
-
-/** Отримати список збережених рецептів з бекенда або з localStorage (якщо помилка) */
-async function fetchBuilderFavorites() {
-    try {
-        const resp = await fetch(`${API_BASE}/api/builder-recipes`);
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-        const data = await resp.json();
-        return data.recipes || [];
-    } catch (err) {
-        console.warn("Builder favorites: backend unavailable, using localStorage", err);
-        return getBuilderFavoritesLocal();
-    }
-}
-
-/** Рендер списку у вкладці "Вподобання" */
-async function renderBuilderFavorites() {
-    const box = document.getElementById("savedRecipesList");
-    if (!box) return;
-
-    const list = await fetchBuilderFavorites();
-
-    if (!list.length) {
-        box.innerHTML = `<div class="soft-note">
-            Список порожній. Збережіть перший рецепт через конструктор ⭐
-        </div>`;
-        return;
-    }
-
-    box.innerHTML = list
-        .map((r) => {
-            const ingList = r.ingredients || [];
-            const created = r.created_at
-                ? new Date(r.created_at)
-                : (r.ts ? new Date(r.ts) : null);
-
-            const dateText = created
-                ? created.toLocaleString()
-                : "";
-
-            return `
-            <div class="saved-card">
-                <div class="saved-top">
-                    <b>${r.title}</b>
-                    <span class="pill">${Number(r.price).toFixed(2)}$ • ${r.kcal || 0} ккал</span>
-                </div>
-                <div class="saved-meta">
-                    <span>${ingList.length} інгредієнтів</span>
-                    <span class="saved-date">${dateText}</span>
-                </div>
-                <div class="saved-ings">
-                    ${ingList.join(", ")}
-                </div>
-            </div>`;
-        })
-        .join("");
-}
-
-/** Зберегти поточну страву з конструктора */
 async function saveCurrentBuilderRecipe() {
     const all = Object.values(picked).flat();
     if (!all.length) {
-        alert("Спочатку зберіть страву в конструкторі 🤏");
+        alert("First, build a dish in the builder 🤏");
         return null;
     }
 
     const totals = sumSelected(all);
 
-    const baseName = picked.base[0]?.name || "Страва з конструктора";
+    const baseName = picked.base[0]?.name || "Custom builder dish";
     const protInst = picked.protein[0]?.name
         ? uaInstrumental(picked.protein[0].name)
         : "";
-    const title = protInst ? `${baseName} з ${protInst}` : baseName;
+    const title = protInst ? `${baseName} with ${protInst}` : baseName;
 
     const email = getCurrentUserEmail();
 
-    const payload = {
+    const builderPayload = {
         userEmail: email || null,
         title,
         price: +totals.price.toFixed(2),
@@ -1267,54 +1473,77 @@ async function saveCurrentBuilderRecipe() {
         ts: Date.now()
     };
 
-
-    // анімація CTA-блоку (як було)
     const cta = document.getElementById("cta-builder");
     if (cta) {
         cta.classList.add("cta-builder--saved");
         setTimeout(() => cta.classList.remove("cta-builder--saved"), 700);
     }
 
-    // спочатку пробуємо зберегти у MySQL
+    let savedId = null;
+
     try {
         const resp = await fetch(`${API_BASE}/api/builder-recipes`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(builderPayload)
         });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
 
         const data = await resp.json();
         console.log("Builder recipe saved with id:", data.id);
+        savedId = data.id ?? null;
     } catch (err) {
-        console.warn("Builder recipe: backend error, saving to localStorage", err);
-        const list = getBuilderFavoritesLocal();
-        list.unshift({
-            id: payload.ts,
-            ...payload
-        });
-        saveBuilderFavoritesLocal(list);
+        console.warn("Builder recipe: backend error", err);
     }
 
-    alert("Рецепт додано у ваші вподобання ⭐");
-    return payload;
+    return {
+        title,
+        totalPrice: +totals.price.toFixed(2),
+        totalKcal: totals.kcal,
+        ingredients: all.map((x) => x.name),
+        builderId: savedId
+    };
 }
 
-/* кнопка в блоці CTA */
-document.getElementById("saveRecipeBtn")?.addEventListener("click", async () => {
-    const r = await saveCurrentBuilderRecipe();
-    if (r) renderBuilderFavorites();
+// Кнопка "Order" у конструкторі: зберегти рецепт + додати в кошик
+// Кнопка "Order" у конструкторі: зберегти рецепт + додати в кошик
+document.getElementById("builderCheckout")?.addEventListener("click", async () => {
+    const recipe = await saveCurrentBuilderRecipe();
+    if (!recipe) return;
+
+    addToCart({
+        id: recipe.builderId ? `builder-${recipe.builderId}` : `builder-${Date.now()}`,
+        title: recipe.title,
+        unitPrice: recipe.totalPrice,
+        builderId: recipe.builderId || null,
+        ingredients: recipe.ingredients || [],   // <–– ВАЖЛИВО
+        isBuilder: true                          // (флаг, якщо хочеш)
+    });
+
+    openCart();
 });
 
-/* відрендерити список при завантаженні сторінки */
-window.addEventListener("DOMContentLoaded", () => {
-    renderBuilderFavorites();
+
+/* CTA button in builder block */
+document.getElementById("saveRecipeBtn")?.addEventListener("click", async () => {
+    const recipe = await saveCurrentBuilderRecipe();
+    if (!recipe) return;
+
+    if (window.tammyUser?.addFavorite) {
+        await window.tammyUser.addFavorite(recipe);
+        // alert is inside addFavorite
+    } else {
+        alert("Recipe added to your favourites ⭐");
+    }
 });
+
 
 /* ============================================================
-   6) AI-CHEF форма (без змін логіки)
+   6) AI-CHEF FORM (real AI)
    ============================================================ */
+window.lastAiChefRecipe = null;
 const tasteForm = document.getElementById("tasteForm");
+
 if (tasteForm) {
     tasteForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -1323,13 +1552,13 @@ if (tasteForm) {
         const payload = {
             diet: form.diet.value,
             cuisines: collectChips(form.querySelector('[data-name="cuisines"]')),
-            budget: form.budget.value || null,
-            time: form.time.value || null,
+            budget: form.budget.value ? Number(form.budget.value) : null,
+            time: form.time.value ? Number(form.time.value) : null,
             sliders: {
-                spicy: +form.spicy.value,
-                sweet: +form.sweet.value,
-                salty: +form.salty.value,
-                sour: +form.sour.value,
+                spice: Number(form.spice.value || 1),
+                sweet: Number(form.sweet.value || 1),
+                salt:  Number(form.salt.value  || 1),
+                acid:  Number(form.acid.value  || 1),
             },
             allergens: form.allergens.value.trim(),
             notes: form.freeText.value.trim(),
@@ -1344,7 +1573,20 @@ if (tasteForm) {
 
         try {
             const recipe = await sendToAI(payload);
-            renderRecipe(recipe);
+
+            // 🔹 запам’ятати останній AI-рецепт
+            window.lastAiChefRecipe = { recipe, taste: payload };
+
+            renderRecipe(recipe, { allergens: payload.allergens, taste: payload });
+        } catch (err) {
+            console.error("AI-chef error:", err);
+            if (box) {
+                box.innerHTML = `
+                    <div class="ai-chef__error">
+                        <h3>Oops, AI is overloaded 🤖</h3>
+                        <p>Try again a little later.</p>
+                    </div>`;
+            }
         } finally {
             box?.classList.remove("loading");
         }
@@ -1352,18 +1594,22 @@ if (tasteForm) {
 }
 
 
-// збереження профілю
+/* Save taste profile */
+/* Save taste profile + add last AI dish to favourites */
 document.getElementById("saveProfile")?.addEventListener("click", async () => {
     const form = document.getElementById("tasteForm");
+    if (!form) return;
+
     const data = Object.fromEntries(new FormData(form).entries());
     data.cuisines = collectChips(form.querySelector('[data-name="cuisines"]'));
-    data.gear = collectChips(form.querySelector('[data-name="gear"]'));
+    data.gear     = collectChips(form.querySelector('[data-name="gear"]'));
 
-    // 1) localStorage — як було
+    // локально
     localStorage.setItem("tasteProfile", JSON.stringify(data));
 
-    // 2) якщо юзер залогінений — шлемо в MySQL
     const email = getCurrentUserEmail();
+
+    // відправляємо профіль у бекенд (як і було)
     if (email) {
         try {
             await fetch(`${API_BASE}/api/taste-profile`, {
@@ -1376,11 +1622,44 @@ document.getElementById("saveProfile")?.addEventListener("click", async () => {
         }
     }
 
-    alert("Профіль збережено ✅");
+    // 🔹 якщо є остання AI-страва – додаємо її в Favourites
+    const last = window.lastAiChefRecipe?.recipe;
+    const taste = window.lastAiChefRecipe?.taste || {};
+
+    if (last && window.tammyUser?.addFavorite) {
+        // така ж логіка ціни, як у renderRecipe
+        const budget = (typeof taste.budget === "number" && !Number.isNaN(taste.budget))
+            ? taste.budget
+            : null;
+        const totalPrice =
+            (typeof last.price === "number" && !Number.isNaN(last.price) && last.price > 0)
+                ? last.price
+                : (budget || 10);
+
+        const favPayload = {
+            title      : last.name || "AI chef dish",
+            totalPrice : Number(totalPrice.toFixed(2)),
+            totalKcal  : Number(last.kcal || 0),
+            ingredients: Array.isArray(last.ingredients) ? last.ingredients : []
+        };
+
+        try {
+            // всередині addFavorite уже є алерт і оновлення списків
+            await window.tammyUser.addFavorite(favPayload);
+        } catch (e) {
+            console.warn("Failed to save AI recipe as favorite:", e);
+            // у випадку фейлу хоча б покажемо, що профіль збережено
+            alert("Profile saved ✅");
+            return;
+        }
+    } else {
+        // якщо рецепта ще немає – просто зберегли профіль
+        alert("Profile saved ✅");
+    }
 });
 
 
-// автозаповнення
+/* Auto-fill profile */
 window.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("tasteForm");
     if (!form) return;
@@ -1388,7 +1667,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     function applyProfileToForm(data) {
         if (!data) return;
 
-        // 1) Звичайні поля форми
         for (const [k, v] of Object.entries(data)) {
             const el = form.elements[k];
             if (!el) continue;
@@ -1401,7 +1679,6 @@ window.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        // 2) Чіпси "cuisines"
         const cuisinesRoot = form.querySelector('[data-name="cuisines"]');
         if (cuisinesRoot) {
             cuisinesRoot
@@ -1417,7 +1694,6 @@ window.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
-        // 3) Чіпси "gear"
         const gearRoot = form.querySelector('[data-name="gear"]');
         if (gearRoot) {
             gearRoot
@@ -1433,7 +1709,6 @@ window.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
-        // 4) Оновити шкали смаку через існуючу updateTasteUI
         ["spice", "sweet", "salt", "acid"].forEach((field) => {
             const hidden = document.getElementById(`taste-${field}`);
             const val = hidden ? Number(hidden.value || 1) : 1;
@@ -1441,7 +1716,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 1) Локальний профіль з localStorage
     let localProfile = null;
     const raw = localStorage.getItem("tasteProfile");
     if (raw) {
@@ -1453,7 +1727,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // 2) Якщо юзер залогінений – підтягнути профіль з сервера і перекрити
     const email = getCurrentUserEmail();
     if (email) {
         try {
@@ -1464,7 +1737,6 @@ window.addEventListener("DOMContentLoaded", async () => {
                 const { profile } = await resp.json();
                 if (profile) {
                     applyProfileToForm(profile);
-                    // оновлюємо localStorage, щоб далі все було синхронно
                     localStorage.setItem("tasteProfile", JSON.stringify(profile));
                 }
             }
@@ -1474,190 +1746,330 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+/* REAL AI-CHEF API */
+async function sendToAI(tastePayload) {
+    const email = getCurrentUserEmail();
 
-// мок-API для демонстрації
-async function sendToAI(payload) {
-    const isMedit = payload.cuisines.includes("Середземноморська");
-    const name = isMedit
-        ? "Салат табуле з квасолею"
-        : "Болоньєзе з індички без глютену";
+    const resp = await fetch(`${API_BASE}/api/ai-chef`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            taste: tastePayload,
+            userEmail: email || null,
+        }),
+    });
 
-    return {
-        name,
-        summary: "Збалансована страва під твої вподобання: помірна солоність, низька солодкість, акцент на свіжій зелені.",
-        time: payload.time || 25,
-        difficulty: "Легка",
-        kcal: 520,
-        fitScore: 92,
-        image: isMedit
-            ? "img/photo/ai/ai-mediterranean.jpg"
-            : "img/photo/ai/ai-bolognese.jpg", // можеш підставити свої картинки
-        ingredients: [
-            "Кіноа — 120 г",
-            "Огірок — 1 шт",
-            "Помідори чері — 8 шт",
-            "Петрушка — пучок",
-            "Оливкова олія — 2 ст. л.",
-            "Лимонний сік — 1 ст. л.",
-            "Сіль/перець — до смаку",
-        ],
-        steps: [
-            "Промий кіноа, залий водою 1:2 та відвари 15 хв.",
-            "Наріж овочі дрібним кубиком, зелень — дрібно.",
-            "Змішай все з оливковою олією та лимонним соком, приправ.",
-        ],
-        explanation: "Уникнули можливих алергенів та зберегли легкість. Високий fitScore через відповідність слайдерам смаку.",
-    };
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "AI-chef API error");
+    }
+
+    return resp.json();
 }
 
-
-function renderRecipe(r) {
+function renderRecipe(r, context = {}) {
     const box = document.getElementById("aiResult");
     if (!box) return;
+    const taste = context.taste || {};
+    const budget = typeof taste.budget === "number" && !Number.isNaN(taste.budget)
+        ? taste.budget
+        : null;
 
-    const profile = JSON.parse(localStorage.getItem("tasteProfile") || "{}");
-    const allergens = (profile.allergens || "")
+    // якщо бекенд колись почне повертати r.price – візьмемо його;
+    // інакше — бюджет або дефолт 10$
+    const pricePerServing = (typeof r.price === "number" && !Number.isNaN(r.price) && r.price > 0)
+        ? r.price
+        : (budget || 10);
+
+    let allergensStr = context.allergens ?? "";
+    if (!allergensStr) {
+        const profile = JSON.parse(localStorage.getItem("tasteProfile") || "{}");
+        allergensStr = profile.allergens || "";
+    }
+
+    const allergens = allergensStr
         .split(",")
         .map((a) => a.trim().toLowerCase())
         .filter(Boolean);
 
     const ingredientsHTML = (r.ingredients || [])
         .map((i) => {
-            const isForbidden = allergens.some((a) => i.toLowerCase().includes(a));
+            const isForbidden = allergens.some((a) =>
+                i.toLowerCase().includes(a)
+            );
             return `
-        <li${isForbidden ? ' class="forbidden"' : ""}>
-          ${isForbidden ? `<span class="badge-forbidden">🚫</span>` : ""}
-          ${i}
-          <button class="replace-btn" data-item="${i}">Замінити</button>
-        </li>`;
+      <li${isForbidden ? ' class="forbidden"' : ""}>
+        ${isForbidden ? `<span class="badge-forbidden">🚫</span>` : ""}
+        <span class="ing-text">${i}</span>
+        <button class="replace-btn" data-item="${i}">Replace</button>
+      </li>`;
         })
         .join("");
 
-    const stepsHTML = (r.steps || [])
-        .map((s) => `<li>${s}</li>`)
-        .join("");
-
-    const imgSrc = r.image || "img/photo/ai/ai-placeholder.jpg";
 
     box.innerHTML = `
       <div class="ai-chef__recipe">
-        <div class="ai-chef__photo">
-          <img src="${imgSrc}" alt="${r.name}">
-        </div>
-
         <div class="ai-chef__body">
           <h3>${r.name}</h3>
           <p>${r.summary || ""}</p>
 
-          <div class="ai-chef__meta">
-            <span class="pill">~${r.time || 25} хв</span>
-            <span class="pill">${r.difficulty || "Легка"}</span>
-            <span class="pill">${r.kcal || "—"} ккал</span>
-            <span class="pill">FitScore ${r.fitScore || 90}%</span>
-          </div>
+<div class="ai-chef__meta">
+  <span class="pill">~${r.time || 25} min</span>
+  <span class="pill">${r.difficulty || "Easy"}</span>
+  <span class="pill">${r.kcal || "—"} kcal</span>
+  <span class="pill">FitScore ${r.fitScore || 90}%</span>
+  ${pricePerServing ? `<span class="pill">≈ $${pricePerServing.toFixed(2)} / serving</span>` : ""}
+</div>
 
-          <h4>Інгредієнти</h4>
+
+          <h4>Ingredients</h4>
           <ul class="ai-chef__ingredients">${ingredientsHTML}</ul>
 
-          <h4>Кроки</h4>
-          <ol class="ai-chef__steps">${stepsHTML}</ol>
-
           <div class="actions">
-            <button class="btn btn-ghost" id="explainBtn">Поясни вибір</button>
-            <button class="btn btn-ghost" id="saveTemplateBtn">Зберегти як шаблон</button>
-            <button class="btn btn-primary">Додати інгредієнти в кошик</button>
+            <button class="btn btn-ghost" id="explainBtn">Explain this choice</button>
+            <button class="btn btn-primary ai-checkout-btn">Order this dish</button>
           </div>
 
           <div class="rating">
-            <p>Оціни результат:</p>
+            <p>Rate this suggestion:</p>
             ${[1,2,3,4,5].map((n) => `<span class="star" data-value="${n}">★</span>`).join("")}
           </div>
         </div>
       </div>
     `;
 
-    // виділити алергени
     box.querySelectorAll(".badge-forbidden").forEach((el) => {
         el.parentElement.style.opacity = "0.65";
     });
 
-    // кнопки «Замінити»
     box.querySelectorAll(".replace-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-            const alt = await suggestAlternatives(btn.dataset.item);
-            alert(`Можна замінити "${btn.dataset.item}" на: ${alt.join(", ")}`);
+            const li = btn.closest("li");
+            const textSpan = li?.querySelector(".ing-text");
+            if (!li || !textSpan) return;
+
+            const currentName = textSpan.textContent.trim();
+
+            // поточний список інгредієнтів у рецепті (вже з урахуванням попередніх замін)
+            const allIngredients = [...box.querySelectorAll(".ai-chef__ingredients .ing-text")]
+                .map(el => el.textContent.trim())
+                .filter(Boolean);
+
+            // ---------- LOADING UI ----------
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.classList.add("is-loading");
+            btn.textContent = "Picking...";
+            // -------------------------------
+
+            try {
+                let altList = await suggestAlternatives(currentName, {
+                    taste,
+                    allergens: allergensStr,
+                    recipeName: r.name,
+                    ingredients: allIngredients
+                });
+
+                altList = (altList || []).map(v => String(v || "").trim());
+
+                // Базова нормалізація для порівняння
+                const normalizeName = (s) => String(s || "")
+                    .toLowerCase()
+                    .replace(/—.*$/,"")
+                    .replace(/[-(),]/g," ")
+                    .replace(/\b(fresh|dried|low-sodium|smoked|ground|chopped|minced|optional|for garnish|to taste|taste|medium|large|small)\b/g,"")
+                    .replace(/\s+/g," ")
+                    .trim();
+
+                const originalNorm = normalizeName(currentName);
+
+                // фільтр сміття
+                altList = altList
+                    .filter(Boolean)
+                    .filter(v => !/^alternative\s*\d*/i.test(v))
+                    .filter(v => normalizeName(v) && normalizeName(v) !== originalNorm)
+                    .filter((v, i, arr) => arr.indexOf(v) === i); // унікальні
+
+                if (!altList.length) {
+                    return; // нічого адекватного — просто не міняємо
+                }
+
+                // випадкова альтернатива
+                let replacement = altList[Math.floor(Math.random() * altList.length)];
+                if (!replacement || !replacement.trim()) return;
+
+                // --- Підганяємо формат під існуючий ---
+                const hasDashOriginal = /—|-/.test(currentName);
+                const hasDashNew      = /—|-/.test(replacement);
+
+                if (hasDashOriginal && !hasDashNew) {
+                    const [origName, origRestRaw] = currentName.split(/—|-/);
+                    const suffix = (origRestRaw || "").trim();   // "1 cup", "80–100 g" тощо
+                    const cleanName = replacement.replace(/—.*$/,"").trim();
+                    replacement = suffix ? `${cleanName} — ${suffix}` : cleanName;
+                }
+
+                textSpan.textContent = replacement;
+                btn.dataset.item = replacement;
+
+                li.classList.add("replaced");
+                setTimeout(() => li.classList.remove("replaced"), 400);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("is-loading");
+                btn.textContent = originalText;
+            }
         });
     });
 
-    // пояснення / шаблон
+
     box.querySelector("#explainBtn")?.addEventListener("click", () => {
-        alert(r.explanation || "Страва підібрана під твої вподобання та обмеження.");
+        alert(
+            r.explanation ||
+            "The dish is tuned to your preferences and limits (diet, taste, allergens)."
+        );
     });
 
-    box.querySelector("#saveTemplateBtn")?.addEventListener("click", () => {
-        localStorage.setItem("aiTemplate", JSON.stringify(r));
-        alert("Шаблон збережено 💾");
+    box.querySelector(".ai-checkout-btn")?.addEventListener("click", () => {
+        addToCart({
+            id: `ai-${Date.now()}`,                // по id будемо розуміти, що це AI
+            title: r.name || "AI chef dish",
+            unitPrice: pricePerServing,
+            description: r.summary || "",
+            ai: true,
+            aiIngredients: Array.isArray(r.ingredients) ? r.ingredients : []
+        });
+
+        openCart();
     });
 
-    // рейтинг зірочками
+
+
     const stars = box.querySelectorAll(".rating .star");
+
+// відновити останній рейтинг з localStorage
+    const last = Number(localStorage.getItem("lastRecipeRating") || 0);
+    if (last) {
+        stars.forEach(s => {
+            s.classList.toggle("active", +s.dataset.value <= last);
+        });
+    }
+
+// клік — зберігаємо як раніше
     stars.forEach((star) => {
         star.addEventListener("click", (e) => {
-            const val = +e.target.dataset.value;
+            const val = +e.currentTarget.dataset.value;
             localStorage.setItem("lastRecipeRating", val);
             stars.forEach((s) => {
                 s.classList.toggle("active", +s.dataset.value <= val);
             });
         });
+
+        // hover: підсвічуємо зліва направо
+        star.addEventListener("mouseenter", (e) => {
+            const val = +e.currentTarget.dataset.value;
+            stars.forEach((s) => {
+                s.classList.toggle("hover", +s.dataset.value <= val);
+            });
+        });
+
+        star.addEventListener("mouseleave", () => {
+            stars.forEach((s) => s.classList.remove("hover"));
+        });
     });
 }
 
+// Просимо бекенд/AI підібрати альтернативний інгредієнт
+async function suggestAlternatives(currentItem, context = {}) {
+    const email = getCurrentUserEmail();
+    const payload = {
+        ingredient: currentItem,
+        recipeName: context.recipeName || "",
+        taste: context.taste || null,          // твій tastePayload
+        allergens: context.allergens || "",    // рядок алергенів
+        ingredients: context.ingredients || [],// поточний список інгредієнтів
+        userEmail: email || null
+    };
 
-async function suggestAlternatives(item) {
-    const base = item.toLowerCase();
-    if (base.includes("сир")) return ["фета", "тофу", "веганський пармезан"];
-    if (base.includes("курка")) return ["індичка", "сочевиця", "гриби"];
-    return ["альтернатива 1", "альтернатива 2"];
+    try {
+        const resp = await fetch(`${API_BASE}/api/ai-chef/replace`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+
+            // варіант 1: бекенд повертає один варіант
+            if (data.alternative && typeof data.alternative === "string") {
+                return [data.alternative];
+            }
+            // варіант 2: масив можливих варіантів
+            if (Array.isArray(data.alternatives) && data.alternatives.length) {
+                return data.alternatives;
+            }
+        }
+    } catch (e) {
+        console.warn("AI replace error:", e);
+    }
+
+    // 🔙 Fallback: якщо AI впав / немає бекенда – робимо просту, але адекватну заміну
+    const base = currentItem.toLowerCase();
+
+    if (base.includes("cheese")) {
+        return ["feta", "mozzarella", "tofu", "vegan parmesan"];
+    }
+    if (base.includes("chicken")) {
+        return ["turkey", "tofu", "lentils", "mushrooms"];
+    }
+    if (base.includes("cream")) {
+        return ["coconut milk", "oat cream", "greek yogurt"];
+    }
+
+    // останній варіант – повернути той самий інгредієнт (щоб точно не було "alternative 1")
+    return [currentItem];
 }
-/* ================== TASTE LEVELS (гострота/солодкість/солоність/кислинка) ================== */
 
-// Тексти для підписів під шкалами
+/* ================== TASTE LEVELS (spice / sweet / salt / acid) ================== */
+
+// Labels for taste sliders
 const TASTE_HINTS = {
     spice: [
-        "Ніжно, майже без гостроти",
-        "Легенька пікантність",
-        "Відчутно гостро",
-        "Для любителів вогнику",
-        "Пекельно гостро 🌶️"
+        "Very mild, almost no heat",
+        "A gentle touch of spice",
+        "Noticeably spicy",
+        "For spice lovers",
+        "Fiery hot 🌶️"
     ],
     sweet: [
-        "Ледь відчутна солодкість",
-        "Помірно солодко",
-        "Як домашній десерт",
-        "Дуже солодко",
-        "Максимум солодкого 🍯"
+        "Barely sweet",
+        "Moderately sweet",
+        "Like a homemade dessert",
+        "Very sweet",
+        "Maximum sweetness 🍯"
     ],
     salt: [
-        "Майже без солі",
-        "Легко підсолено",
-        "Класичний баланс солі",
-        "Добре підсолено",
-        "Дуже солоно 🧂"
+        "Almost no salt",
+        "Lightly salted",
+        "Balanced salt level",
+        "Well salted",
+        "Very salty 🧂"
     ],
     acid: [
-        "М’яко, майже без кислинки",
-        "Легка свіжість",
-        "Відчутна кислинка",
-        "Яскраво кисло",
-        "Дуже кисло, як лимон 🍋"
+        "Soft, almost no acidity",
+        "A light refreshing tang",
+        "Clearly tangy",
+        "Bright, zesty acidity",
+        "Very sour, like lemon 🍋"
     ]
 };
 
 /**
- * Оновлює UI для однієї шкали:
- *  - активну крапку
- *  - прихований інпут
- *  - підпис-пояснення під шкалою
+ * Updates UI for a single taste scale:
+ *  - active dot
+ *  - hidden input
+ *  - explanatory label under the scale
  */
 function updateTasteUI(field, value) {
     const scale = document.querySelector(`.taste-scale[data-field="${field}"]`);
@@ -1678,7 +2090,7 @@ function updateTasteUI(field, value) {
     }
 }
 
-// Делегування кліку по крапках taste-dot
+// taste-dot click delegation
 document.addEventListener("click", (e) => {
     const dot = e.target.closest(".taste-dot");
     if (!dot) return;
@@ -1686,13 +2098,13 @@ document.addEventListener("click", (e) => {
     const scale = dot.closest(".taste-scale");
     if (!scale) return;
 
-    const field = scale.dataset.field;   // spice | sweet | salt | acid
+    const field = scale.dataset.field;
     const value = +dot.dataset.value || 1;
 
     updateTasteUI(field, value);
 });
 
-// Ініціалізація значень при завантаженні сторінки / автозаповненні профілю
+// initialize taste values on page load
 window.addEventListener("DOMContentLoaded", () => {
     ["spice", "sweet", "salt", "acid"].forEach((field) => {
         const hidden = document.getElementById(`taste-${field}`);
@@ -1700,6 +2112,8 @@ window.addEventListener("DOMContentLoaded", () => {
         updateTasteUI(field, val);
     });
 });
+
+
 
 /* ============================================================
    7) Footer: Email → Telegram (демо, без змін)
@@ -1724,9 +2138,10 @@ async function sendEmail() {
     const btn = document.querySelector(".base-plane");
 
     if (!isMail) {
-        alert("Неправильна адреса");
+        alert("Invalid email address");
         return;
     }
+
 
     // анімація польоту
     if (btn && !btn.classList.contains("fly")) {
@@ -1760,16 +2175,13 @@ async function sendEmail() {
         .then((d) => console.log("Telegram result:", d))
         .catch((e) => console.error(e));
 
-    alert("Дякуємо за підписку! ✉️");
+    alert("Thank you for subscribing! ✉️");
     inputEl.value = "";
 }
 
 window.sendEmail = sendEmail;
-
 /* ============================================================
-   8) USER PANEL (off-canvas): toggle, auth mock, tabs, prefs
-/* ============================================================
-   8) USER PANEL (off-canvas) + реальний бекенд авторизації
+   8) USER PANEL (off-canvas) + real auth backend
    ============================================================ */
 (() => {
     const btnToggle = document.getElementById("userToggle");
@@ -1791,7 +2203,6 @@ window.sendEmail = sendEmail;
         '[tabindex]:not([tabindex="-1"])','[contenteditable="true"]'
     ].join(',');
 
-    const API_BASE = "/api";
 
     let lastFocus = null;
 
@@ -1853,7 +2264,7 @@ window.sendEmail = sendEmail;
         }
     });
 
-    // ======= DOM для auth =======
+    // ======= DOM for auth =======
     const guestView   = $("#guestView");
     const userView    = $("#userView");
     const nameField   = $('[data-field="name"]');
@@ -1873,7 +2284,7 @@ window.sendEmail = sendEmail;
     const loginError  = $("#loginError");
     const signupError = $("#signupError");
 
-    // ======= Зберігання у localStorage (для фронта) =======
+    // ======= LocalStorage helpers =======
     function read(key, fallback) {
         try { return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback; }
         catch { return fallback; }
@@ -1882,13 +2293,14 @@ window.sendEmail = sendEmail;
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    // ---- auth в localStorage: user + token ----
+    // ---- auth in localStorage: user + token ----
     function getAuth() {
         const token = localStorage.getItem("authToken") || null;
         const user  = read("authUser", null);
         if (!token || !user) return null;
         return { token, user };
     }
+
     function getToken() {
         return getAuth()?.token || null;
     }
@@ -1912,39 +2324,60 @@ window.sendEmail = sendEmail;
         return t.split(/\s+/).map(s => s[0]?.toUpperCase()).slice(0,2).join("") || "U";
     }
 
-    // ======= Запит до бекенду з токеном =======
-    async function api(path, options = {}) {
-        const token = getToken();
-        const headers = {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        };
-        if (token) {
-            headers.Authorization = "Bearer " + token;
-        }
-        const res = await fetch(API_BASE + path, {
-            ...options,
-            headers
-        });
-        let data = {};
-        try { data = await res.json(); } catch {}
-        if (!res.ok) {
-            const msg = data.error || "Сталася помилка.";
-            throw new Error(msg);
-        }
-        return data;
-    }
+        // !!! ВАЖЛИВО: тут уже НЕ оголошуємо API_BASE ще раз
+        // Використовуємо глобальний API_BASE і додаємо /api
+        const API_PREFIX = `${API_BASE || ""}/api`;
 
-    // ======= Рендер авторизації =======
+        async function api(path, options = {}) {
+            const token = getToken();
+            const headers = {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            };
+            if (token) {
+                headers.Authorization = "Bearer " + token;
+            }
+            const res = await fetch(API_PREFIX + path, {
+                ...options,
+                headers
+            });
+            let data = {};
+            try { data = await res.json(); } catch {}
+            if (!res.ok) {
+                const msg = data.error || "Сталася помилка.";
+                throw new Error(msg);
+            }
+            return data;
+        }
+
+
+
+    // ======= Render auth state =======
     function renderAuth() {
         const u = getCurrentUser();
         const isAuth = !!u;
+
+        // update global email for cart / AI
+        currentUserEmail = isAuth ? (u.email || null) : null;
+
+        // підтягуємо кошик, прив'язаний до цього email
+        if (typeof loadCartFromStorage === "function") {
+            loadCartFromStorage();
+        }
+
+        if (typeof updateCartDisplay === "function") {
+            updateCartDisplay();
+        }
+        if (typeof updateCartTotals === "function") {
+            updateCartTotals();
+        }
+
 
         guestView.hidden = isAuth;
         userView.hidden  = !isAuth;
 
         if (isAuth) {
-            const name  = u.name || "Користувач";
+            const name  = u.name || "User";
             const email = u.email || "email@example.com";
 
             nameField.textContent  = name;
@@ -1961,21 +2394,21 @@ window.sendEmail = sendEmail;
             headerBtn.classList.add("is-auth");
             headerBtn.title = name;
 
-            // Підтягуємо дані з бекенду
+            // pull data for account
             renderFavorites();
             renderOrders();
             renderPoints();
         } else {
-            userNameEl.textContent  = "Гість";
-            userEmailEl.textContent = "Ви не ввійшли";
+            userNameEl.textContent  = "Guest";
+            userEmailEl.textContent = "You are not logged in";
             avatarInit.textContent  = "U";
             if (headerInitial) headerInitial.hidden = true;
             headerBtn.classList.remove("is-auth");
-            headerBtn.title = "Гість";
+            headerBtn.title = "Guest";
         }
     }
 
-    // ======= Перемикач логін/реєстрація (2 кроки) =======
+    // ======= Switch login / signup modes =======
     function switchAuthMode(mode) {
         if (!guestForms) return;
 
@@ -1984,10 +2417,9 @@ window.sendEmail = sendEmail;
 
         panel.classList.remove("auth-mode-login", "auth-mode-signup");
         panel.classList.add(mode === "login" ? "auth-mode-login" : "auth-mode-signup");
-
-        guestNote.textContent = mode === "login"
-            ? "Введіть email та пароль, щоб увійти."
-            : "Заповніть поля, щоб створити акаунт.";
+        if (guestNote) {
+            guestNote.style.display = "none";
+        }
 
         loginForm.hidden  = mode !== "login";
         signupForm.hidden = mode !== "signup";
@@ -1998,11 +2430,22 @@ window.sendEmail = sendEmail;
         btnShowLogin?.classList.toggle("is-selected", mode === "login");
         btnShowSignup?.classList.toggle("is-selected", mode === "signup");
 
-        // злегка прокрутимо панель наверх до форм
         panel.scrollTo({ top: guestForms.offsetTop - 40, behavior: "smooth" });
     }
 
-    // ======= Перевірка email / пароля =======
+    btnShowLogin?.addEventListener("click", () => switchAuthMode("login"));
+    btnShowSignup?.addEventListener("click", () => switchAuthMode("signup"));
+    const bottomSwitchBtns = $all(".auth-switch-btn");
+    bottomSwitchBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = btn.dataset.target; // "login" or "signup"
+            if (target === "login" || target === "signup") {
+                switchAuthMode(target);
+            }
+        });
+    });
+
+    // ======= Validation helpers =======
     function isValidEmailBasic(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
@@ -2017,14 +2460,14 @@ window.sendEmail = sendEmail;
     }
     function emailTypoHint(email) {
         const e = String(email).trim().toLowerCase();
-        if (e.endsWith("@gma.com")) return "Можливо, ви мали на увазі @gmail.com?";
-        return "Некоректний email.";
+        if (e.endsWith("@gma.com")) return "Maybe you meant @gmail.com?";
+        return "Invalid email.";
     }
     function isValidPassword(pw) {
         return typeof pw === "string" && pw.length >= 8;
     }
 
-    // ======= Показ / приховування пароля =======
+    // ======= Password show/hide toggles =======
     $all(".password-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
             const field = btn.closest(".password-field");
@@ -2033,11 +2476,11 @@ window.sendEmail = sendEmail;
             const show = input.type === "password";
             input.type = show ? "text" : "password";
             btn.classList.toggle("is-active", show);
-            btn.setAttribute("aria-label", show ? "Сховати пароль" : "Показати пароль");
+            btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
         });
     });
 
-    // ======= Login (через /api/auth/login) =======
+    // ======= Login (/api/auth/login) =======
     loginForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!loginError) return;
@@ -2052,7 +2495,7 @@ window.sendEmail = sendEmail;
             return;
         }
         if (!isValidPassword(password)) {
-            loginError.textContent = "Пароль має містити мінімум 8 символів.";
+            loginError.textContent = "Password must be at least 8 characters long.";
             return;
         }
 
@@ -2061,26 +2504,38 @@ window.sendEmail = sendEmail;
                 method: "POST",
                 body: JSON.stringify({ email, password })
             });
+
             setAuth(data.user, data.token);
+
+            if (typeof renderPoints === "function") {
+                renderPoints();
+            }
+            if (typeof renderFavorites === "function") {
+                renderFavorites();
+            }
+            if (typeof renderOrders === "function") {
+                renderOrders();
+            }
+
             closePanel();
         } catch (err) {
             loginError.textContent = err.message;
         }
     });
 
-    // ======= Signup (через /api/auth/signup) =======
+    // ======= Signup (/api/auth/signup) =======
     signupForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!signupError) return;
         signupError.textContent = "";
 
         const fd = new FormData(signupForm);
-        const name  = String(fd.get("name") || "Користувач").trim();
+        const name  = String(fd.get("name") || "User").trim();
         const email = String(fd.get("email") || "").trim();
         const password = String(fd.get("password") || "");
 
         if (!name) {
-            signupError.textContent = "Вкажіть ім’я.";
+            signupError.textContent = "Please enter your name.";
             return;
         }
         if (!isValidEmail(email)) {
@@ -2088,7 +2543,7 @@ window.sendEmail = sendEmail;
             return;
         }
         if (!isValidPassword(password)) {
-            signupError.textContent = "Пароль має містити мінімум 8 символів.";
+            signupError.textContent = "Password must be at least 8 characters long.";
             return;
         }
 
@@ -2097,7 +2552,19 @@ window.sendEmail = sendEmail;
                 method: "POST",
                 body: JSON.stringify({ name, email, password })
             });
+
             setAuth(data.user, data.token);
+
+            if (typeof renderPoints === "function") {
+                renderPoints();
+            }
+            if (typeof renderFavorites === "function") {
+                renderFavorites();
+            }
+            if (typeof renderOrders === "function") {
+                renderOrders();
+            }
+
             closePanel();
         } catch (err) {
             signupError.textContent = err.message;
@@ -2109,7 +2576,7 @@ window.sendEmail = sendEmail;
         setAuth(null, null);
     });
 
-    // ======= Tabs =======
+    // ======= Tabs inside user panel =======
     const tabBtns = $all(".user-tabs .tab");
     const panels  = $all(".tab-panels .panel");
 
@@ -2121,56 +2588,292 @@ window.sendEmail = sendEmail;
         btn.addEventListener("click", () => showTab(btn.dataset.tab));
     });
 
-    // ======= Рендер списку вподобань з бекенду =======
-    async function renderFavorites() {
+    // ======= Tammy points from backend =======
+    async function renderPoints() {
+        const badgeValueEl   = document.getElementById("pointsValue");
+        const profileBriefEl = document.getElementById("profilePointsBrief");
+        const historyBox     = document.getElementById("pointsHistory");
+
+        currentPointsBalance = 0;
+        if (badgeValueEl)   badgeValueEl.textContent   = "0";
+        if (profileBriefEl) profileBriefEl.textContent = "0";
+        if (historyBox)     historyBox.innerHTML      = "";
+
         const user = getCurrentUser();
-        const box  = $("#savedRecipesList");
-        if (!box) return;
-        box.innerHTML = "";
         if (!user) {
-            box.innerHTML = '<p class="soft-note">Щоб бачити вподобання, увійдіть у акаунт.</p>';
-            $("#profileFavCount") && ($("#profileFavCount").textContent = "0");
+            if (historyBox) {
+                historyBox.innerHTML =
+                    '<p class="soft-note">Log in to start earning Tammy points.</p>';
+            }
+            updateCartModal();
+            return;
+        }
+
+        try {
+            const data = await api("/user/points");
+
+            const balance = Number(data.balance || 0);
+            const history = Array.isArray(data.history) ? data.history : [];
+
+            currentPointsBalance = balance;
+
+            if (badgeValueEl)   badgeValueEl.textContent   = String(balance);
+            if (profileBriefEl) profileBriefEl.textContent = String(balance);
+
+            if (historyBox) {
+                if (!history.length) {
+                    historyBox.innerHTML =
+                        '<p class="soft-note">No points yet. Save recipes or place an order to start earning.</p>';
+                } else {
+                    historyBox.innerHTML = history
+                        .map((ev) => {
+                            const delta = Number(ev.delta || 0);
+                            const sign  = delta >= 0 ? "+" : "−";
+                            const cls   = delta >= 0 ? "points-row--plus" : "points-row--minus";
+                            const abs   = Math.abs(delta);
+                            const reason = ev.reason || "Points update";
+                            const time   = ev.created_at
+                                ? new Date(ev.created_at).toLocaleString()
+                                : "";
+
+                            return `
+                            <article class="points-row ${cls}">
+                                <div class="points-row__main">
+                                    <span class="points-row__delta">${sign}${abs}</span>
+                                    <span class="points-row__reason">${reason}</span>
+                                </div>
+                                <time class="points-row__time">${time}</time>
+                            </article>
+                        `;
+                        })
+                        .join("");
+                }
+            }
+
+            updateCartModal();
+        } catch (err) {
+            console.warn("renderPoints error:", err);
+            if (historyBox) {
+                historyBox.innerHTML =
+                    `<p class="soft-note">Failed to load points: ${err.message}</p>`;
+            }
+            currentPointsBalance = 0;
+            updateCartModal();
+        }
+    }
+
+    // ======= Toggle “How to earn points” FAQ =======
+    const pointsBadgeEl = document.getElementById("pointsBadge");
+    const pointsFaqEl   = document.getElementById("pointsFaq");
+
+    if (pointsBadgeEl && pointsFaqEl) {
+        pointsBadgeEl.addEventListener("click", () => {
+            pointsFaqEl.hidden = !pointsFaqEl.hidden;
+            pointsBadgeEl.classList.toggle("points-pill--active", !pointsFaqEl.hidden);
+        });
+    }
+
+    // ======= Render favourites from backend =======
+    async function renderFavorites() {
+        const user     = getCurrentUser();
+        const listBox  = $("#savedRecipesList");
+        const emptyBox = $("#favsEmpty");
+
+        if (!listBox) return;
+
+        listBox.innerHTML = "";
+
+        if (!user) {
+            if (emptyBox) {
+                emptyBox.hidden = false;
+                emptyBox.innerHTML = "⭐ Log in to see your favourite recipes.";
+            }
+            const counter = $("#profileFavCount");
+            if (counter) counter.textContent = "0";
             return;
         }
 
         try {
             const rows = await api("/user/favorites");
-            $("#profileFavCount") && ($("#profileFavCount").textContent = rows.length);
 
-            if (!rows.length) {
-                box.innerHTML = '<p class="soft-note">Список порожній. Збережіть перший рецепт через конструктор ⭐</p>';
-                return;
-            }
+            const groups = new Map();
 
-            rows.forEach(r => {
+            for (const r of rows) {
                 let ings = [];
                 try {
                     ings = Array.isArray(r.ingredients)
                         ? r.ingredients
                         : JSON.parse(r.ingredients || "[]");
-                } catch { ings = []; }
+                } catch {
+                    ings = [];
+                }
 
-                const card = document.createElement("div");
-                card.className = "saved-card";
-                card.innerHTML = `
-                    <div class="saved-top">
-                        <div class="saved-title">${r.title}</div>
-                        <div class="saved-date">${new Date(r.created_at).toLocaleString()}</div>
-                    </div>
-                    <div class="saved-meta">
-                        <span>${Number(r.total_price || 0).toFixed(2)} ₴</span>
-                        <span>${r.total_kcal} ккал</span>
-                    </div>
-                    <div class="saved-ings">${ings.join(", ")}</div>
+                const priceNum = Number(r.total_price ?? r.totalPrice ?? 0);
+                const kcalNum  = Number(r.total_kcal  ?? r.totalKcal  ?? 0);
+                const key = [
+                    r.title,
+                    priceNum.toFixed(2),
+                    kcalNum,
+                    ings.join(",")
+                ].join("|");
+
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        row: {
+                            ...r,
+                            _ings : ings,
+                            _price: priceNum,
+                            _kcal : kcalNum
+                        },
+                        ids: new Set()
+                    });
+                }
+                groups.get(key).ids.add(r.id);
+            }
+
+            const uniqueEntries = Array.from(groups.values());
+
+            const counter = $("#profileFavCount");
+            if (counter) counter.textContent = String(uniqueEntries.length);
+
+            if (!uniqueEntries.length) {
+                if (emptyBox) {
+                    emptyBox.hidden = false;
+                    emptyBox.innerHTML = `
+                    ⭐ Your favourites list is empty.<br>
+                    Save your first recipe from the builder!
                 `;
-                box.appendChild(card);
+                }
+                return;
+            }
+
+            if (emptyBox) {
+                emptyBox.hidden = true;
+            }
+
+            uniqueEntries.forEach(({ row: r, ids }) => {
+                const ings      = r._ings;
+                const createdAt = r.created_at
+                    ? new Date(r.created_at).toLocaleString()
+                    : "";
+
+                const price = r._price.toFixed(2);
+                const kcal  = r._kcal;
+                const ingsCount = ings.length;
+                const allIds = Array.from(ids);
+
+                const card = document.createElement("article");
+                card.className = "saved-card";
+
+                card.innerHTML = `
+    <header class="saved-header">
+        <div class="saved-header-main">
+            <h4 class="saved-title">${r.title}</h4>
+            <span class="saved-count">${ingsCount} ingredients</span>
+        </div>
+
+        <div class="saved-pill">
+            <span class="saved-pill__price">${price}$</span>
+            <span class="saved-pill__dot">•</span>
+            <span class="saved-pill__kcal">${kcal} kcal</span>
+        </div>
+    </header>
+
+    <div class="saved-body">
+        <div class="saved-ings">
+            <span class="saved-ings-label">Ingredients:</span>
+            <span class="saved-ings-text">${ings.join(", ")}</span>
+        </div>
+
+        <footer class="fav-footer">
+            <span class="fav-date">${createdAt}</span>
+            <button class="fav-remove-btn"
+                    data-ids="${allIds.join(",")}"
+                    title="Remove from favourites">
+                🗑
+            </button>
+        </footer>
+    </div>
+`;
+
+                const deleteBtn = card.querySelector(".fav-remove-btn");
+
+                if (deleteBtn) {
+                    deleteBtn.addEventListener("click", async () => {
+                        const idsStr = deleteBtn.dataset.ids || "";
+                        const ids = idsStr
+                            .split(",")
+                            .map((x) => x.trim())
+                            .filter(Boolean);
+
+                        if (!ids.length) return;
+                        if (!confirm("Remove this recipe from favourites?")) return;
+
+                        try {
+                            for (const id of ids) {
+                                await api(`/user/favorites/${id}`, { method: "DELETE" });
+                            }
+
+                            card.classList.add("fade-remove");
+
+                            setTimeout(async () => {
+                                await renderFavorites();
+                                await renderPoints();
+                                window.dispatchEvent(new Event("favsUpdated"));
+                            }, 300);
+                        } catch (err) {
+                            alert("Failed to remove recipe: " + err.message);
+                        }
+                    });
+                }
+
+                listBox.appendChild(card);
             });
+
         } catch (err) {
-            box.innerHTML = `<p class="soft-note">Помилка завантаження вподобань: ${err.message}</p>`;
+            if (emptyBox) {
+                emptyBox.hidden = false;
+                emptyBox.innerHTML = `
+                ⚠️ Failed to load favourites:<br>${err.message}
+            `;
+            }
         }
     }
 
-    // ======= Рендер замовлень з бекенду =======
+    // Normalize items array from different backend formats
+    function extractOrderItems(o) {
+        if (Array.isArray(o.items)) return o.items;
+        if (Array.isArray(o.order_items)) return o.order_items;
+
+        if (o.items && typeof o.items === "object" && Array.isArray(o.items.items)) {
+            return o.items.items;
+        }
+
+        function parseJsonArray(val) {
+            if (typeof val !== "string") return null;
+            const t = val.trim();
+            if (!t) return null;
+            try {
+                const parsed = JSON.parse(t);
+                if (Array.isArray(parsed)) return parsed;
+                if (parsed && Array.isArray(parsed.items)) return parsed.items;
+            } catch {
+                return null;
+            }
+            return null;
+        }
+
+        let parsed =
+            parseJsonArray(o.items) ||
+            parseJsonArray(o.items_json) ||
+            parseJsonArray(o.order_items);
+
+        if (parsed) return parsed;
+
+        return [];
+    }
+
+    // ======= Render orders from backend =======
     async function renderOrders() {
         const user = getCurrentUser();
         const box  = $("#ordersList");
@@ -2178,141 +2881,161 @@ window.sendEmail = sendEmail;
         box.innerHTML = "";
 
         if (!user) {
-            box.innerHTML = '<p class="soft-note">Увійдіть, щоб бачити свої замовлення.</p>';
+            box.innerHTML = '<p class="soft-note">Log in to see your orders.</p>';
             return;
         }
 
         try {
             const rows = await api("/user/orders");
-            $("#profileOrderCount") && ($("#profileOrderCount").textContent = rows.length);
-            // масив
+            const counter = $("#profileOrderCount");
+            if (counter) counter.textContent = rows.length.toString();
+
             if (!rows.length) {
-                box.innerHTML = '<p class="soft-note">Поки що замовлень немає. Спробуйте оформити перше замовлення 🍽️</p>';
+                box.innerHTML = '<p class="soft-note">No orders yet. Try placing your first order 🍽️</p>';
                 return;
             }
 
             rows.forEach(o => {
-                const card = document.createElement("div");
-                card.className = "saved-card";
+                const status = (o.status || "new").toLowerCase();
+                const createdAt = o.created_at
+                    ? new Date(o.created_at).toLocaleString()
+                    : "";
+                const earned = Number(o.earned_points || 0);
+
+                const items = extractOrderItems(o);
+                const itemsCount = Number(
+                    o.items_count != null
+                        ? o.items_count
+                        : (Array.isArray(items) ? items.length : 0)
+                );
+
+                let itemsPreview = "";
+                if (items.length) {
+                    const names = items.slice(0, 3).map(it => it.title || it.name || "Dish");
+                    itemsPreview = names.join(", ") + (items.length > 3 ? "…" : "");
+                }
+
+                const detailsHtml = items.length
+                    ? `
+            <div class="orders-details" hidden>
+                <p class="orders-details-title">Items in this order:</p>
+                <ul class="orders-details-list">
+                    ${items.map(it => {
+                        const q = Number(it.quantity || 1);
+                        const u = Number(it.unitPrice ?? it.unit_price ?? 0);
+                        return `
+                        <li class="orders-details-row">
+                            <span class="orders-details-item-title">
+                                ${it.title || it.name || "Dish"}
+                            </span>
+                            <span class="orders-details-item-meta">
+                                ×${q} · ${u.toFixed(2)} ₴
+                            </span>
+                        </li>`;
+                    }).join("")}
+                </ul>
+                <p class="orders-details-note">
+                    Re-order and delivery tracking are coming soon.
+                </p>
+            </div>`
+                    : `
+            <div class="orders-details" hidden>
+                <p class="orders-details-note">
+                    Order breakdown (dishes list) will appear here soon.
+                </p>
+            </div>`;
+
+                const amount = Number(o.total_price || 0).toFixed(2);
+
+                const card = document.createElement("article");
+                card.className = `saved-card orders-card orders-card--${status}`;
+                card.dataset.orderId = o.id;
+
                 card.innerHTML = `
-                    <div class="saved-top">
-                        <div class="saved-title">Замовлення #${o.id}</div>
-                        <div class="saved-date">${new Date(o.created_at).toLocaleString()}</div>
+            <div class="orders-main-row">
+                <div class="orders-title-col">
+                    <div class="orders-id-row">
+                        <span class="orders-hash">#</span>
+                        <span class="saved-title">Order ${o.id}</span>
                     </div>
-                    <div class="saved-meta">
-                        <span>Сума: ${Number(o.total_price || 0).toFixed(2)} ₴</span>
-                        <span>Статус: ${o.status}</span>
-                        <span>${o.items_count} позицій</span>
+
+                    <div class="saved-meta-row">
+                        <span class="order-amount">
+                            <span class="order-amount-label">Amount:</span>
+                            ${amount} ₴
+                        </span>
+
+                        ${itemsCount ? `
+                        <span class="order-items-chip">
+                            ${itemsCount} item${itemsCount > 1 ? "s" : ""}
+                        </span>` : ""}
+
+                        <span class="order-status status-pill status-pill--${status}">
+                            ${status}
+                        </span>
                     </div>
-                `;
+
+                    ${itemsPreview ? `
+                    <p class="orders-preview-line">
+                        ${itemsPreview}
+                    </p>` : ""}
+                </div>
+
+                ${earned > 0 ? `
+                <div class="orders-points-pill">
+                    <span class="orders-points-label">+${earned}</span>
+                    <span class="orders-points-caption">Tammy pts</span>
+                </div>` : ""}
+            </div>
+
+            <footer class="orders-footer">
+                <time class="saved-date">${createdAt}</time>
+                <span class="orders-mini-note">
+                    Tap to see order details
+                </span>
+                <span class="orders-chevron" aria-hidden="true">⌄</span>
+            </footer>
+
+            ${detailsHtml}
+        `;
+
                 box.appendChild(card);
             });
-        } catch (err) {
-            box.innerHTML = `<p class="soft-note">Помилка завантаження замовлень: ${err.message}</p>`;
-        }
-    }
 
-    // ======= Рендер балів =======
-    async function renderPoints() {
-        const user = getCurrentUser();
-        const badge      = $("#pointsBadge");
-        const valueEl    = $("#pointsValue");
-        const historyBox = $("#pointsHistory");
-        const faqBox     = $("#pointsFaq");
-        if (!badge || !valueEl || !historyBox) return;
+            if (!box._ordersDetailsBound) {
+                box.addEventListener("click", (e) => {
+                    const card = e.target.closest(".orders-card");
+                    if (!card) return;
 
-        if (!user) {
-            valueEl.textContent = "0";
-            historyBox.innerHTML = '<p class="soft-note">Увійдіть або зареєструйтеся, щоб бачити свої бали.</p>';
-            if (faqBox) faqBox.hidden = true;
-            return;
-        }
+                    const details = card.querySelector(".orders-details");
+                    if (!details) return;
 
-        // клік по бейджу — показ/приховати FAQ
-        if (!badge.dataset.bindClick) {
-            badge.dataset.bindClick = "1";
-            badge.addEventListener("click", () => {
-                if (!faqBox) return;
-                const hidden = faqBox.hidden;
-                faqBox.hidden = !hidden;
-                faqBox.classList.toggle("points-faq--visible", !hidden);
-            });
-        }
+                    const expanded = card.classList.toggle("orders-card--expanded");
+                    details.hidden = !expanded;
 
-        try {
-            const data = await api("/user/points"); // { balance, history }
+                    const chevron = card.querySelector(".orders-chevron");
+                    if (chevron) chevron.classList.toggle("is-open", expanded);
+                });
 
-            valueEl.textContent = data.balance ?? 0;
-
-            // короткий бейдж в профілі
-            const brief = document.getElementById("profilePointsBrief");
-            if (brief) {
-                brief.textContent = data.balance ?? 0;
+                box._ordersDetailsBound = true;
             }
 
-            if (!data.history || !data.history.length) {
-                historyBox.innerHTML = '<p class="soft-note">Історія балів поки порожня.</p>';
-                return;
-            }
-
-            historyBox.innerHTML = "";
-            data.history.forEach(h => {
-                const row = document.createElement("div");
-                row.className = "points-history-item";
-                const sign = h.delta > 0 ? "+" : "";
-                row.innerHTML = `
-                <span>${sign}${h.delta} балів — ${h.reason}</span>
-                <span>${new Date(h.created_at).toLocaleString()}</span>
-            `;
-                historyBox.appendChild(row);
-            });
         } catch (err) {
-            historyBox.innerHTML = `<p class="soft-note">Помилка завантаження балів: ${err.message}</p>`;
+            box.innerHTML = `<p class="soft-note">Failed to load orders: ${err.message}</p>`;
         }
     }
 
+    // expose for other parts
+    window.renderPoints    = renderPoints;
+    window.renderOrders    = renderOrders;
+    window.renderFavorites = renderFavorites;
 
-    // ======= Prefs & Settings =======
-    const darkToggle  = document.getElementById("toggleDark");
-    const newsToggle  = document.getElementById("toggleEmailNews");
-    const btnClearDemo= document.getElementById("btnClearDemo");
-
-    function applyTheme() {
-        const t = localStorage.getItem("theme") || "light";
-        document.documentElement.classList.toggle("theme-dark", t === "dark");
-        if (darkToggle) darkToggle.checked = t === "dark";
-    }
-    darkToggle?.addEventListener("change", () => {
-        localStorage.setItem("theme", darkToggle.checked ? "dark" : "light");
-        applyTheme();
-    });
-
-    function loadSettings() {
-        const s = read("userSettings", { emailNews:false });
-        if (newsToggle) newsToggle.checked = !!s.emailNews;
-    }
-    newsToggle?.addEventListener("change", () => {
-        write("userSettings", { emailNews: newsToggle.checked });
-    });
-
-    // Тепер кнопка чистить лише локальні дані (тему, кеш профілю)
-    btnClearDemo?.addEventListener("click", () => {
-        if (!confirm("Очистити локальні налаштування (тема, кеш профілю)?")) return;
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("authUser");
-        localStorage.removeItem("theme");
-        localStorage.removeItem("userSettings");
-        applyTheme();
-        renderAuth();
-        alert("Локальні дані очищено ✅");
-    });
-
-    // ======= Публічне API для конструктора =======
+    // ======= Public API for builder / checkout =======
     window.tammyUser = {
         async addFavorite(recipe) {
             const user = getCurrentUser();
             if (!user) {
-                alert("Спочатку увійдіть, щоб зберігати рецепти.");
+                alert("Please log in to save recipes.");
                 openPanel();
                 return;
             }
@@ -2330,16 +3053,15 @@ window.sendEmail = sendEmail;
 
                 renderFavorites();
                 renderPoints();
-                alert("Рецепт збережено у вашому акаунті ✅");
+                alert("Recipe saved to your account ✅");
             } catch (err) {
-                alert("Не вдалося зберегти рецепт: " + err.message);
+                alert("Failed to save recipe: " + err.message);
             }
         },
 
         async addOrder(orderPayload) {
-            // orderPayload: { items: [...], totalPrice }
             if (!orderPayload || !Array.isArray(orderPayload.items) || !orderPayload.items.length) {
-                alert("Кошик порожній.");
+                alert("Your cart is empty.");
                 return;
             }
             const user = getCurrentUser();
@@ -2347,30 +3069,39 @@ window.sendEmail = sendEmail;
             try {
                 const res = await fetch("/api/orders", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
                         userEmail: user?.email || null,
-                        items    : orderPayload.items
+                        items: orderPayload.items
                     })
                 });
+
                 const data = await res.json();
                 if (!res.ok || !data.ok) {
-                    throw new Error(data.error || "Помилка створення замовлення.");
+                    throw new Error(data.error || "Failed to create order.");
                 }
 
                 renderOrders();
                 renderPoints();
-                alert(`Замовлення #${data.orderId} створено ✅`);
+                const pts = data.earnedPoints || 0;
+                if (pts > 0) {
+                    alert(`Order #${data.orderId} created ✅\nYou earned +${pts} Tammy points!`);
+                } else {
+                    alert(`Order #${data.orderId} created ✅`);
+                }
             } catch (err) {
-                alert("Не вдалося оформити замовлення: " + err.message);
+                alert("Failed to create order: " + err.message);
             }
         }
     };
 
     // ======= INIT =======
-    applyTheme();
-    loadSettings();
     renderAuth();
     const activeTab = panel.querySelector(".user-tabs .tab.is-active")?.dataset.tab || "profile";
     showTab(activeTab);
 })();
+
+
+
+
+

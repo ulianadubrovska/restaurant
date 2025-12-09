@@ -8,7 +8,7 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_TAMMYFOOD";
 
 /**
- * Реєстрація
+ * Signup
  * POST /api/auth/signup
  * body: { name, email, password }
  */
@@ -17,10 +17,10 @@ router.post("/signup", async (req, res) => {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ error: "Заповніть всі поля." });
+            return res.status(400).json({ error: "Please fill in all fields." });
         }
         if (password.length < 8) {
-            return res.status(400).json({ error: "Пароль має містити мінімум 8 символів." });
+            return res.status(400).json({ error: "Password must be at least 8 characters long." });
         }
 
         const [rows] = await pool.query(
@@ -28,7 +28,7 @@ router.post("/signup", async (req, res) => {
             [email]
         );
         if (rows.length) {
-            return res.status(400).json({ error: "Такий email вже зареєстрований." });
+            return res.status(400).json({ error: "This email is already registered." });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
@@ -38,10 +38,10 @@ router.post("/signup", async (req, res) => {
             [name, email, passwordHash]
         );
 
-        // Вітальний бонус 125 балів
+        // Welcome bonus 125 points
         await pool.query(
             "INSERT INTO user_points (user_email, delta, reason) VALUES (?, ?, ?)",
-            [email, 125, "Вітальний бонус за реєстрацію"]
+            [email, 125, "Welcome bonus for registration"]
         );
 
         const user = { id: result.insertId, name, email };
@@ -50,12 +50,12 @@ router.post("/signup", async (req, res) => {
         res.json({ user, token });
     } catch (err) {
         console.error("Signup error:", err);
-        res.status(500).json({ error: "Внутрішня помилка сервера." });
+        res.status(500).json({ error: "Internal server error." });
     }
 });
 
 /**
- * Логін
+ * Login
  * POST /api/auth/login
  * body: { email, password }
  */
@@ -68,13 +68,13 @@ router.post("/login", async (req, res) => {
             [email]
         );
         if (!rows.length) {
-            return res.status(400).json({ error: "Користувача з таким email не знайдено." });
+            return res.status(400).json({ error: "No user found with this email." });
         }
         const userRow = rows[0];
 
         const ok = await bcrypt.compare(password, userRow.password_hash);
         if (!ok) {
-            return res.status(400).json({ error: "Невірний пароль." });
+            return res.status(400).json({ error: "Invalid password." });
         }
 
         const user = { id: userRow.id, name: userRow.name, email: userRow.email };
@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
         res.json({ user, token });
     } catch (err) {
         console.error("Login error:", err);
-        res.status(500).json({ error: "Внутрішня помилка сервера." });
+        res.status(500).json({ error: "Internal server error." });
     }
 });
 

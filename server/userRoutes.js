@@ -5,7 +5,7 @@ import { requireAuth } from "./authMiddleware.js";
 
 const router = express.Router();
 
-// ---------- Профіль + баланс балів ----------
+// ---------- Profile + Points Balance ----------
 router.get("/me", requireAuth, async (req, res) => {
     try {
         const email = req.user.email;
@@ -15,7 +15,7 @@ router.get("/me", requireAuth, async (req, res) => {
             [email]
         );
         if (!userRows.length) {
-            return res.status(404).json({ error: "Користувача не знайдено." });
+            return res.status(404).json({ error: "User not found." });
         }
 
         const user = userRows[0];
@@ -29,13 +29,13 @@ router.get("/me", requireAuth, async (req, res) => {
         res.json({ user, pointsBalance: balance });
     } catch (err) {
         console.error("GET /me error", err);
-        res.status(500).json({ error: "Внутрішня помилка сервера." });
+        res.status(500).json({ error: "Internal server error." });
     }
 });
 
-// ---------- Вподобання (builder_recipes) ----------
+// ---------- Favorites (builder_recipes) ----------
 
-// GET всі рецепти користувача
+// GET all user's saved recipes
 router.get("/favorites", requireAuth, async (req, res) => {
     try {
         const email = req.user.email;
@@ -47,11 +47,11 @@ router.get("/favorites", requireAuth, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error("GET /favorites error", err);
-        res.status(500).json({ error: "Не вдалося завантажити вподобання." });
+        res.status(500).json({ error: "Failed to load favorites." });
     }
 });
 
-// POST новий рецепт + бали
+// POST new favorite recipe + points
 router.post("/favorites", requireAuth, async (req, res) => {
     try {
         const email = req.user.email;
@@ -63,45 +63,122 @@ router.post("/favorites", requireAuth, async (req, res) => {
             [email, title, totalPrice, totalKcal, JSON.stringify(ingredients || [])]
         );
 
-        // +5 балів за збережений рецепт
+        // +5 points for saving a recipe
         await pool.query(
             "INSERT INTO user_points (user_email, delta, reason) VALUES (?, ?, ?)",
-            [email, 5, "Збережений рецепт з конструктора"]
+            [email, 5, "Saved recipe from builder"]
         );
 
         res.status(201).json({ id: result.insertId });
     } catch (err) {
         console.error("POST /favorites error", err);
-        res.status(500).json({ error: "Не вдалося зберегти рецепт." });
+        res.status(500).json({ error: "Failed to save the recipe." });
     }
 });
 
-// ---------- Замовлення (тільки читання) ----------
+// DELETE a saved recipe
+router.delete("/favorites/:id", requireAuth, async (req, res) => {
+    try {
+        const email = req.user.email;
+        const favId = Number(req.params.id);
+
+        if (!favId) {
+            return res.status(400).json({ error: "Invalid recipe ID." });
+        }
+
+        const [result] = await pool.query(
+            "DELETE FROM builder_recipes WHERE id = ? AND user_email = ?",
+            [favId, email]
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ error: "Recipe not found." });
+        }
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error("DELETE /favorites error", err);
+        res.status(500).json({ error: "Failed to delete the recipe." });
+    }
+});
+
+// ---------- Orders (read-only with items) ----------
 router.get("/orders", requireAuth, async (req, res) => {
     try {
         const email = req.user.email;
-        const [rows] = await pool.query(
-            `SELECT 
-                 o.id,
-                 o.total_price,
-                 o.status,
-                 o.created_at,
-                 COUNT(oi.id) AS items_count
-             FROM orders o
-             LEFT JOIN order_items oi ON oi.order_id = o.id
-             WHERE o.user_email = ?
-             GROUP BY o.id
-             ORDER BY o.created_at DESC`,
+
+        const [orders] = await pool.query(
+            `
+            SELECT 
+                o.id,
+                o.user_email,
+                o.total_price,
+                o.status,
+                o.created_at,
+                COALESCE(up.earned_points, 0) AS earned_points,
+                COUNT(DISTINCT oi.id) AS items_count
+            FROM orders o
+            LEFT JOIN order_items oi 
+                ON oi.order_id = o.id
+            LEFT JOIN (
+                SELECT order_id, SUM(delta) AS earned_points
+                FROM user_points
+                WHERE delta > 0 AND reason LIKE 'Points for order%'
+                GROUP BY order_id
+            ) up ON up.order_id = o.id
+            WHERE o.user_email = ?
+            GROUP BY o.id, up.earned_points
+            ORDER BY o.created_at DESC
+            LIMIT 50
+            `,
             [email]
         );
-        res.json(rows);
+
+        if (!orders.length) return res.json([]);
+
+        const ids = orders.map(o => o.id);
+        const placeholders = ids.map(() => "?").join(",");
+
+        const [itemRows] = await pool.query(
+            `
+            SELECT order_id, title, unit_price, quantity
+            FROM order_items
+            WHERE order_id IN (${placeholders})
+            ORDER BY id
+            `,
+            ids
+        );
+
+        const itemsByOrder = {};
+        for (const r of itemRows) {
+            if (!itemsByOrder[r.order_id]) itemsByOrder[r.order_id] = [];
+            itemsByOrder[r.order_id].push({
+                title: r.title,
+                unitPrice: Number(r.unit_price),
+                quantity: Number(r.quantity)
+            });
+        }
+
+        const result = orders.map(o => ({
+            id: o.id,
+            user_email: o.user_email,
+            total_price: Number(o.total_price),
+            status: o.status,
+            created_at: o.created_at,
+            earned_points: o.earned_points,
+            items_count: o.items_count,
+            items: itemsByOrder[o.id] || []
+        }));
+
+        res.json(result);
+
     } catch (err) {
         console.error("GET /orders error", err);
-        res.status(500).json({ error: "Не вдалося завантажити замовлення." });
+        res.status(500).json({ error: "Failed to load orders." });
     }
 });
 
-// ---------- Бали ----------
+// ---------- Points ----------
 router.get("/points", requireAuth, async (req, res) => {
     try {
         const email = req.user.email;
@@ -121,7 +198,7 @@ router.get("/points", requireAuth, async (req, res) => {
         res.json({ balance, history: historyRows });
     } catch (err) {
         console.error("GET /points error", err);
-        res.status(500).json({ error: "Не вдалося завантажити бали." });
+        res.status(500).json({ error: "Failed to load points." });
     }
 });
 

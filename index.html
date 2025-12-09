@@ -22,20 +22,18 @@
 <body>
 <header class="header">
     <div class="container">
-        <!-- Навігація -->
+        <!-- Navigation -->
         <nav class="header-menu">
             <a class="brand" href="#home">Tammy <span>Food</span></a>
             <div class="nav">
                 <a href="#home">Home</a>
                 <a href="#about">About us</a>
                 <a href="#menu">Menu</a>
-                <!-- Нове: конструктор страв -->
+                <!-- Dish builder section -->
                 <a href="#ai-builder">Dish Builder</a>
-                <!-- Нове: секція з AI -->
+                <!-- AI section -->
                 <a href="#ai-chef">AI Chef</a>
                 <a href="#contact">Contact Us</a>
-
-                <a href="index-ua.html">UA</a>
 
                 <a class="cart" href="#">
                     <i>🛒</i><span id="cart-count">0</span>
@@ -51,10 +49,9 @@
             </div>
         </nav>
 
-
-        <!-- HERO секція -->
+        <!-- HERO section -->
         <section class="hero" id="home">
-            <!-- Ліва частина -->
+            <!-- Left side -->
             <div class="hero__info">
                 <div class="pill">Fast Delivery</div>
 
@@ -78,15 +75,13 @@
                         <span>AI Recipe Wizard</span>
                     </a>
                 </div>
-
-
             </div>
 
-            <!-- Права частина (тарілка + анімації) -->
+            <!-- Right side (plate + animations) -->
             <div class="hero__visual">
                 <img class="plate" src="img/hero/plate.svg" alt="Dish on plate" />
 
-                <!-- падаючі інгредієнти -->
+                <!-- falling ingredients -->
                 <div class="ingredients" aria-hidden="true">
                     <div class="ingredient i-pasta" style="--x:-42; --rot:-6; --delay:.00s; --z:1"></div>
                     <div class="ingredient i-pasta" style="--x:  0; --rot:  2; --delay:.06s; --z:1"></div>
@@ -120,7 +115,7 @@
                     <div class="ingredient i-garlic"  style="--x: 90px;   --rot:-9deg;  --delay:1.36s;" data-last="true"></div>
                 </div>
 
-                <!-- готова страва + соус + пар -->
+                <!-- ready dish + sauce + steam -->
                 <div class="dish-header" id="heroDish" aria-hidden="true">
                     <img class="dish-ready photo" src="img/ingredients/dish-ready.png" alt="Creamy chicken pasta">
                     <img class="cream" src="img/ingredients/cream-drizzle.svg" alt="cream">
@@ -128,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- Декор -->
+            <!-- Decor -->
             <div class="hero-decor" aria-hidden="true">
                 <img class="decor decor--tomato"  data-speed="9"  src="img/icons/tomato.svg"  alt="">
                 <img class="decor decor--chili"   data-speed="10" src="img/icons/chili.svg"   alt="">
@@ -139,7 +134,7 @@
                 <img class="decor decor--wine"    data-speed="14" src="img/icons/wine.svg"    alt="">
             </div>
 
-            <!-- Скутер -->
+            <!-- Scooter -->
             <div class="delivery-strip" aria-hidden="true">
                 <div class="delivery-road"></div>
                 <img class="delivery-scooter" src="img/icons/scooter.svg" alt="Delivery scooter" />
@@ -151,7 +146,7 @@
 <main>
     <div id="main" class="main how-works how-works-visible">
 
-    <!-- Заголовок секції -->
+        <!-- Section title -->
         <div class="about-us" id="about">
             <h1 class="describe">How Tammy Food works</h1>
             <p class="lorem-2">
@@ -160,9 +155,9 @@
             </p>
         </div>
 
-        <!-- Три кроки: меню → конструктор → AI-шеф -->
+        <!-- Three steps: menu → builder → AI chef -->
         <div class="about-us-parent">
-            <!-- КРОК 1: Меню -->
+            <!-- STEP 1: Menu -->
             <div class="about-us-block how-card">
             <span class="circle-1 circle-base">
                 <img class="icons-1" src="img/icons/how-works/icons1.svg" alt="Menu icon" />
@@ -174,7 +169,7 @@
                 </p>
             </div>
 
-            <!-- КРОК 2: Конструктор страв -->
+            <!-- STEP 2: Dish constructor -->
             <div class="about-us-block how-card">
             <span class="circle-2 circle-base">
                 <img class="icons-2" src="img/icons/how-works/icons2.svg" alt="Dish builder icon" />
@@ -186,7 +181,7 @@
                 </p>
             </div>
 
-            <!-- КРОК 3: AI-шеф + збереження рецепта -->
+            <!-- STEP 3: AI chef + save recipe -->
             <div class="about-us-block how-card">
             <span class="circle-3 circle-base">
                 <img class="icons-3" src="img/icons/how-works/icons3.svg" alt="AI chef icon" />
@@ -200,8 +195,6 @@
             </div>
         </div>
     </div>
-
-
 
     <div id="menu" class="menu-main">
         <div class="menu-title">
@@ -238,52 +231,55 @@
         </div>
     </div>
 
-    <!-- ================= Конструктор ст'рав ================= -->
+    <!-- ================= Dish Builder ================= -->
     <section class="builder-section" id="ai-builder">
         <div class="builder-header">
-            <h1>Створи свій шедевр від шефа</h1>
-            <p>Обирай інгредієнти — AI допоможе створити ідеальну страву!</p>
+            <h1>Create your chef’s masterpiece</h1>
+            <p>Choose ingredients — AI will help you create the perfect dish!</p>
         </div>
 
         <div class="builder-container">
             <!-- Left: Ingredient selector -->
             <div class="ingredient-panel">
                 <div class="category-tabs">
-                    <button class="tab active" data-cat="base"><img src="img/icons/rice.svg" alt="" class="tab-icon"> Основа</button>
-                    <button class="tab" data-cat="protein"><img src="img/icons/protein.svg" alt="" class="tab-icon"> Протеїн</button>
-                    <button class="tab" data-cat="veggies"><img src="img/icons/veggies.svg" alt="" class="tab-icon"> Овочі</button>
-                    <button class="tab" data-cat="sauces"><img src="img/icons/sauce.svg" alt="" class="tab-icon"> Соуси</button>
-                    <button class="tab" data-cat="herbs"><img src="img/icons/herbs.svg" alt="" class="tab-icon"> Спеції&зелень</button>
-                    <button class="tab" data-cat="drinks"><img src="img/icons/drink.svg" alt="" class="tab-icon"> Напої</button>
+                    <button class="tab active" data-cat="base"><img src="img/icons/rice.svg" alt="" class="tab-icon"> Base</button>
+                    <button class="tab" data-cat="protein"><img src="img/icons/protein.svg" alt="" class="tab-icon"> Protein</button>
+                    <button class="tab" data-cat="veggies"><img src="img/icons/veggies.svg" alt="" class="tab-icon"> Veggies</button>
+                    <button class="tab" data-cat="sauces"><img src="img/icons/sauce.svg" alt="" class="tab-icon"> Sauces</button>
+                    <button class="tab" data-cat="herbs"><img src="img/icons/herbs.svg" alt="" class="tab-icon"> Spices &amp; herbs</button>
+                    <button class="tab" data-cat="drinks"><img src="img/icons/drink.svg" alt="" class="tab-icon"> Drinks</button>
                 </div>
 
                 <div id="ingredient-list" class="ingredient-list"></div>
 
                 <div id="aiHint" class="ai-suggestion" aria-live="polite" style="display:none"></div>
-
             </div>
 
             <!-- Right: Preview -->
             <div class="preview-panel">
                 <div id="dishPreview" class="preview-placeholder">
-                    <h3>Тут буде ваш рецепт приготування</h3>
-                    <p>Додайте інгредієнти — і Шеф складе покроковий опис із найкращим способом готування.</p>
+                    <h3>Your cooking recipe will appear here</h3>
+                    <p>Add ingredients — and the Chef will create a step-by-step description with the best cooking method.</p>
                 </div>
 
-
                 <div class="result-box">
-                    <p><b>Ціна:</b> <span id="price">$0</span></p>
-                    <p><b>Калорійність:</b> <span id="calories">0 kcal</span></p>
+                    <p><b>Price:</b> <span id="price">$0</span></p>
+                    <p><b>Calories:</b> <span id="calories">0 kcal</span></p>
+                    <button id="generateRecipeBtn" class="btn btn-primary builder-generate">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-label">Get recipe</span>
+                    </button>
+
 
                     <!-- RANDOM DISH -->
                     <button class="random-btn" id="randomDish">
                         <span class="random-dice">🎲</span>
-                        <span>Страва-сюрприз</span>
+                        <span>Surprise dish</span>
                     </button>
                 </div>
 
                 <div class="composition">
-                    <h4>Склад</h4>
+                    <h4>Composition</h4>
                     <ul id="compositionList"></ul>
                 </div>
 
@@ -291,94 +287,91 @@
                     <button id="builderCheckout"
                             type="button"
                             class="btn btn-primary builder-checkout builder-checkout--fancy">
-                        <span class="checkout-label-main">Замовити</span>
+                        <span class="checkout-label-main">Order</span>
                     </button>
 
-                    <!-- без .btn, тільки свій клас -->
+                    <!-- without .btn, only own class -->
                     <button id="clearPicked" type="button" class="preview-clear preview-clear--wide">
                         <span class="clear-icon">🧹</span>
-                        <span>Очистити</span>
+                        <span>Clear</span>
                     </button>
                 </div>
 
+            </div>
         </div>
     </section>
 
     <!-- ================= CTA ================= -->
-    <!-- ================= CTA ================= -->
     <section class="cta-builder" id="cta-builder">
         <div class="cta-builder__inner">
-            <h2>Сподобався ваш рецепт?</h2>
+            <h2>Did you like your recipe?</h2>
             <p>
-                Збережіть свій шедевр у вподобання, щоб легко повторити його наступного разу
-                або замовити за пару кліків.
+                Save your masterpiece to favourites so you can easily repeat it next time
+                or order it again in just a couple of clicks.
             </p>
 
             <div class="cta-builder__actions">
                 <button class="btn btn-primary" id="saveRecipeBtn">
-                <span class="cta-save-icon">🤍</span>
-                <span>Зберегти рецепт у вподобання</span>
-            </button>
-
-
+                    <span class="cta-save-icon">🤍</span>
+                    <span>Save recipe to favourites</span>
+                </button>
 
                 <p class="cta-builder__note">
-                Рецепт зберігається лише для вас у цьому браузері.
-            </p>
-        </div>
+                    The recipe is stored only for you in this browser.
+                </p>
+            </div>
         </div>
     </section>
-
 
     <!-- ================= AI Chef ================= -->
     <section class="ai-chef container" id="ai-chef">
         <div class="ai-chef__intro">
-            <h1>Штучний інтелект шеф-кухар</h1>
-            <p>Опиши свої вподобання — ми запропонуємо страву, що підійде саме тобі.</p>
+            <h1>AI Head Chef</h1>
+            <p>Describe your preferences — we will suggest a dish that suits you perfectly.</p>
         </div>
 
         <div class="ai-chef__grid">
             <form class="ai-chef__prefs" id="tasteForm">
-                <h3>Профіль смаку</h3>
+                <h3>Taste profile</h3>
                 <p class="ai-chef__hint">
-                    Заповнюй тільки те, що важливо зараз: решту полів можна лишити порожніми.
+                    Fill in only what matters now: the rest of the fields can be left empty.
                 </p>
                 <div class="field">
-                    <label>Дієта</label>
+                    <label>Diet</label>
                     <select name="diet">
-                        <option value="regular">Звичайна</option>
-                        <option value="vegetarian">Вегетаріанська</option>
-                        <option value="vegan">Веганська</option>
-                        <option value="gluten-free">Без глютену</option>
-                        <option value="keto">Кето</option>
+                        <option value="regular">Regular</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                        <option value="gluten-free">Gluten-free</option>
+                        <option value="keto">Keto</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <label>Кухні (уподобання)</label>
+                    <label>Cuisines (preferences)</label>
                     <div class="chips" data-name="cuisines">
-                        <button type="button" class="chip">Італійська</button>
-                        <button type="button" class="chip">Азійська</button>
-                        <button type="button" class="chip">Мексиканська</button>
-                        <button type="button" class="chip">Середземноморська</button>
-                        <button type="button" class="chip">Українська</button>
+                        <button type="button" class="chip">Italian</button>
+                        <button type="button" class="chip">Asian</button>
+                        <button type="button" class="chip">Mexican</button>
+                        <button type="button" class="chip">Mediterranean</button>
+                        <button type="button" class="chip">Ukrainian</button>
                     </div>
                 </div>
 
                 <div class="grid-2">
                     <div class="field">
-                        <label>Бюджет (за порцію)</label>
+                        <label>Budget (per serving)</label>
                         <input type="number" name="budget" min="0" placeholder="$" />
                     </div>
                     <div class="field">
-                        <label>Час приготування (хв)</label>
+                        <label>Cooking time (min)</label>
                         <input type="number" name="time" min="5" step="5" placeholder="30" />
                     </div>
                 </div>
 
                 <div class="grid-2">
                     <div class="field field-taste">
-                        <label>ГОСТРОТА</label>
+                        <label>SPICINESS</label>
 
                         <div class="taste-scale" data-field="spice">
                             <button type="button" class="taste-dot is-active" data-value="1">1</button>
@@ -388,26 +381,26 @@
                             <button type="button" class="taste-dot" data-value="5">5</button>
                         </div>
 
-                        <div class="taste-hint" data-for="spice">Ніжно</div>
+                        <div class="taste-hint" data-for="spice">Mild</div>
 
-                        <!-- приховане поле, щоб у JS/бекенді мати число -->
+                        <!-- hidden field, to have a number in JS/backend -->
                         <input type="hidden" name="spice" id="taste-spice" value="1">
                     </div>
                     <div class="field field-taste">
-                    <label>СОЛОДКІСТЬ</label>
-                    <div class="taste-scale" data-field="sweet">
-                        <button type="button" class="taste-dot is-active" data-value="1">1</button>
-                        <button type="button" class="taste-dot" data-value="2">2</button>
-                        <button type="button" class="taste-dot" data-value="3">3</button>
-                        <button type="button" class="taste-dot" data-value="4">4</button>
-                        <button type="button" class="taste-dot" data-value="5">5</button>
+                        <label>SWEETNESS</label>
+                        <div class="taste-scale" data-field="sweet">
+                            <button type="button" class="taste-dot is-active" data-value="1">1</button>
+                            <button type="button" class="taste-dot" data-value="2">2</button>
+                            <button type="button" class="taste-dot" data-value="3">3</button>
+                            <button type="button" class="taste-dot" data-value="4">4</button>
+                            <button type="button" class="taste-dot" data-value="5">5</button>
+                        </div>
+                        <div class="taste-hint" data-for="sweet">Mild</div>
+                        <input type="hidden" name="sweet" id="taste-sweet" value="1">
                     </div>
-                    <div class="taste-hint" data-for="sweet">Ніжно</div>
-                    <input type="hidden" name="sweet" id="taste-sweet" value="1">
-                </div>
 
                     <div class="field field-taste">
-                        <label>СОЛОНІСТЬ</label>
+                        <label>SALTINESS</label>
                         <div class="taste-scale" data-field="salt">
                             <button type="button" class="taste-dot is-active" data-value="1">1</button>
                             <button type="button" class="taste-dot" data-value="2">2</button>
@@ -415,12 +408,12 @@
                             <button type="button" class="taste-dot" data-value="4">4</button>
                             <button type="button" class="taste-dot" data-value="5">5</button>
                         </div>
-                        <div class="taste-hint" data-for="salt">Ніжно</div>
+                        <div class="taste-hint" data-for="salt">Mild</div>
                         <input type="hidden" name="salt" id="taste-salt" value="1">
                     </div>
 
                     <div class="field field-taste">
-                        <label>КИСЛИНКА</label>
+                        <label>SOURNESS</label>
                         <div class="taste-scale" data-field="acid">
                             <button type="button" class="taste-dot is-active" data-value="1">1</button>
                             <button type="button" class="taste-dot" data-value="2">2</button>
@@ -428,43 +421,43 @@
                             <button type="button" class="taste-dot" data-value="4">4</button>
                             <button type="button" class="taste-dot" data-value="5">5</button>
                         </div>
-                        <div class="taste-hint" data-for="acid">Ніжно</div>
+                        <div class="taste-hint" data-for="acid">Mild</div>
                         <input type="hidden" name="acid" id="taste-acid" value="1">
                     </div>
 
                 </div>
 
                 <div class="field">
-                    <label>Алергени / небажані</label>
-                    <input type="text" name="allergens" placeholder="арахіс, морепродукти, лактоза…" />
+                    <label>Allergens / unwanted</label>
+                    <input type="text" name="allergens" placeholder="peanuts, seafood, lactose…" />
                 </div>
 
                 <div class="field">
-                    <label>Що ти хочеш/не хочеш сьогодні?</label>
-                    <textarea name="freeText" rows="4" placeholder="Напр.: хочу щось легке, багато зелені, без майонезу…"></textarea>
+                    <label>What do you want / not want today?</label>
+                    <textarea name="freeText" rows="4" placeholder="For example: I want something light, lots of greens, no mayonnaise…"></textarea>
                 </div>
 
                 <div class="field">
-                    <label>Наявна техніка</label>
+                    <label>Available equipment</label>
                     <div class="chips" data-name="gear">
-                        <button type="button" class="chip">Духовка</button>
-                        <button type="button" class="chip">Пательня</button>
-                        <button type="button" class="chip">Гриль</button>
-                        <button type="button" class="chip">Блендер</button>
-                        <button type="button" class="chip">Мультиварка</button>
+                        <button type="button" class="chip">Oven</button>
+                        <button type="button" class="chip">Pan</button>
+                        <button type="button" class="chip">Grill</button>
+                        <button type="button" class="chip">Blender</button>
+                        <button type="button" class="chip">Multicooker</button>
                     </div>
                 </div>
 
                 <div class="actions">
-                    <button type="submit" class="btn btn-primary">Згенерувати страву AI</button>
-                    <button type="button" id="saveProfile" class="btn btn-ghost">Зберегти профіль смаку</button>
+                    <button type="submit" class="btn btn-primary">Generate AI dish</button>
+                    <button type="button" id="saveProfile" class="btn btn-ghost">Save taste profile</button>
                 </div>
             </form>
 
             <aside class="ai-chef__result" id="aiResult">
                 <div class="placeholder">
-                    <h3>Тут з’явиться твоя страва</h3>
-                    <p>Заповни вподобання та натисни «Згенерувати».</p>
+                    <h3>Your dish will show up here</h3>
+                    <p>Fill in your preferences and click “Generate”.</p>
                 </div>
             </aside>
         </div>
@@ -473,7 +466,7 @@
 
 <footer id="contact" class="footer">
     <div class="main-footer">
-        <!-- Ліва колонка -->
+        <!-- Left column -->
         <div class="tammy-food-link">
             <h1 class="tammy-footer">
                 Tammy <span class="food-footer">Food</span>
@@ -530,7 +523,7 @@
             </div>
         </div>
 
-        <!-- Середня колонка -->
+        <!-- Middle column -->
         <div class="link">
             <h1 class="quick-link">QUICK LINK</h1>
             <div class="link-type">
@@ -543,15 +536,14 @@
             </div>
         </div>
 
-
-        <!-- Права колонка -->
+        <!-- Right column -->
         <div class="letter-link">
             <h1 class="letter">NEWS LETTER</h1>
             <p class="describe-letter">
-                Subscribe to our newsletter to get the latest updates & news.
+                Subscribe to our newsletter to get the latest updates &amp; news.
             </p>
             <p class="newsletter-hint">
-                Залиш свій e-mail — ми напишемо тобі на пошту, а заявку отримаємо в Telegram.
+                Leave your e-mail — we will write to you, and we will receive your request in Telegram.
             </p>
 
             <form action="GET" class="newsletter-form">
@@ -567,21 +559,20 @@
         </div>
     </div>
 
-    <hr />
 
     <div class="footer-end">
         <p class="copy">&copy;</p>
-        <p class="copyright">Copyright 2024 Tammy Food. All Rights Reserved.</p>
+        <p class="copyright">Copyright 2025 Tammy Food. All Rights Reserved.</p>
     </div>
 
-    <!-- Білий контактний блок зверху -->
+    <!-- White contact block at the top -->
     <div class="email">
         <span class="elips-base-email-1">
             <img class="mail-icons-1" src="img/icons/footer/mail-fill.svg" alt="E-mail" />
         </span>
 
         <a class="text-mail"
-           href="mailto:example@gmail.com?subject=Задайте%20нам%20питання&body=Введіть%20текст">
+           href="mailto:example@gmail.com?subject=Ask%20us%20a%20question&body=Enter%20your%20text">
             tammy-food@gmail.com
         </a>
 
@@ -595,12 +586,9 @@
     </div>
 </footer>
 
-
 <!-- Back to top -->
 <div id="myBtn" title="Back to top"><i class="fa fa-arrow-up"></i></div>
 
-<!-- Cart modal -->
-<!-- Cart modal -->
 <!-- Cart modal -->
 <div id="cart-modal" class="cart-modal">
     <div class="cart-card">
@@ -611,8 +599,6 @@
                     <h3 class="cart-title">Your Cart</h3>
                     <p class="cart-subtitle">
                         <span id="cart-items-count">0 items</span>
-                        <span class="dot">•</span>
-                        Est. delivery 25–35 min
                     </p>
                 </div>
             </div>
@@ -620,21 +606,49 @@
         </header>
 
         <ul id="cart-items" class="cart-list"></ul>
-
         <div class="cart-summary">
             <div class="cart-summary-row">
                 <span>Subtotal</span>
                 <span id="cart-subtotal">$0.00</span>
             </div>
+
+
+            <!-- NEW: discount with points -->
             <div class="cart-summary-row">
-                <span>Delivery</span>
-                <span id="cart-delivery">$2.50</span>
+                <span>Points discount</span>
+                <span id="cart-discount">-$0.00</span>
             </div>
+
             <div class="cart-summary-row cart-summary-row--total">
                 <span>Total</span>
                 <span id="cart-total">$0.00</span>
             </div>
         </div>
+
+        <!-- NEW: Tammy points block -->
+        <div class="cart-points-block">
+            <div class="cart-summary-row cart-summary-row--points">
+                <span>Available Tammy points</span>
+                <span id="cartPointsBalance">0</span>
+            </div>
+
+            <div class="cart-points-controls">
+                <label class="cart-points-label">
+                    Use points:
+                    <input type="number"
+                           id="cartPointsUse"
+                           min="0"
+                           step="1"
+                           value="0" />
+                </label>
+                <button type="button" id="cartPointsMax" class="btn btn-ghost btn-ghost--tiny">
+                    Use max
+                </button>
+            </div>
+
+            <p class="cart-points-info" id="cartPointsInfo"></p>
+        </div>
+
 
         <div class="cart-actions">
             <button class="btn btn-primary cart-main-btn" onclick="placeOrder()">
@@ -647,72 +661,54 @@
     </div>
 </div>
 
-
-<!-- 🔹 Права панель користувача -->
-<!-- 🔹 Права панель користувача -->
-<!-- Кнопка у хедері -->
-
-<!-- Права панель -->
+<!-- Right user panel -->
 <aside class="user-panel" id="userPanel" aria-hidden="true">
     <div class="user-panel__head">
         <div class="user-avatar">
             <span class="user-avatar__initial">U</span>
         </div>
         <div class="user-panel__meta">
-            <div class="user-name">Гість</div>
-            <div class="user-email">Ви не ввійшли</div>
+            <div class="user-name">Guest</div>
+            <div class="user-email">You are not logged in</div>
         </div>
-        <button class="user-panel__close" id="userClose" aria-label="Закрити">×</button>
+        <button class="user-panel__close" id="userClose" aria-label="Close">×</button>
     </div>
 
-    <!-- ======= ГОСТЬ ======= -->
+    <!-- ======= GUEST ======= -->
     <section class="guest-view" id="guestView">
-        <!-- маленький «герой» з анімацією -->
+        <!-- small “hero” with animation -->
         <header class="user-hero">
-            <h3 class="user-hero__title">Вітаємо в Tammy Food!</h3>
+            <h3 class="user-hero__title">Welcome to Tammy Food!</h3>
             <p class="user-hero__subtitle">
-                Увійдіть у свій акаунт, щоб зберігати улюблені страви з конструктора,
-                переглядати історію замовлень та збирати Tammy-бали.
+                Log into your account to save favourite dishes from the builder,
+                view order history and collect Tammy points.
             </p>
-
-            <div class="user-hero__orbit">
-                <div class="orbit-dot orbit-dot--1"></div>
-                <div class="orbit-dot orbit-dot--2"></div>
-                <div class="orbit-dot orbit-dot--3"></div>
-                <div class="orbit-center">
-                    <span class="orbit-center__icon">🍝</span>
-                </div>
-            </div>
         </header>
 
-        <!-- КРОК 1: вибір режиму -->
+        <!-- STEP 1: choose mode -->
         <div class="guest-actions" id="guestActions">
             <div class="guest-actions__buttons">
                 <button type="button"
                         class="btn btn-pill is-selected"
                         id="btnShowLogin">
-                    Увійти
+                    Log in
                 </button>
                 <button type="button"
                         class="btn btn-pill"
                         id="btnShowSignup">
-                    Створити акаунт
+                    Create account
                 </button>
             </div>
         </div>
 
         <p class="guest-note" id="guestNote">
-            Спочатку оберіть: <b>«Увійти»</b> чи <b>«Створити акаунт»</b>.
+            First choose: <b>“Log in”</b> or <b>“Create account”</b>.
         </p>
 
-        <!-- КРОК 2: логін / реєстрація (з’являється відразу під текстом, без великої «дірки») -->
+        <!-- STEP 2: login / registration (appears right under the text, without a big gap) -->
         <div id="guestForms" class="guest-forms" hidden>
-            <!-- Форма входу -->
+            <!-- Login form -->
             <form id="formLogin" class="auth-card" hidden>
-                <p class="auth-card__hint">
-                    Введіть email та пароль, щоб увійти.
-                </p>
-
                 <label class="field" for="loginEmail">
                     <span class="field__label">Email</span>
                     <input id="loginEmail" type="email" name="email"
@@ -720,15 +716,15 @@
                 </label>
 
                 <label class="field password-field" for="loginPassword">
-                    <span class="field__label">Пароль</span>
+                    <span class="field__label">Password</span>
                     <div class="field__with-icon">
                         <input id="loginPassword" type="password" name="password"
-                               placeholder="Мінімум 8 символів"
+                               placeholder="At least 8 characters"
                                required minlength="8" />
-                        <!-- одне «око» -->
+                        <!-- one “eye” -->
                         <button type="button"
                                 class="password-toggle"
-                                aria-label="Показати пароль">
+                                aria-label="Show password">
                             <span class="password-toggle__icon">👁</span>
                         </button>
                     </div>
@@ -737,21 +733,29 @@
                 <p class="auth-error" id="loginError" aria-live="polite"></p>
 
                 <button class="btn btn-primary btn-primary--wide" type="submit">
-                    Увійти
+                    Log in
                 </button>
+                <p class="auth-switch">
+                    Don’t have an account yet?
+                    <button type="button"
+                            class="auth-switch-btn"
+                            data-target="signup">
+                        Create account
+                    </button>
+                </p>
             </form>
 
-            <!-- Форма реєстрації -->
+            <!-- Signup form -->
             <form id="formSignup" class="auth-card" hidden>
                 <p class="auth-card__hint">
-                    Створіть акаунт, щоб зберігати вподобання
-                    та отримати вітальні Tammy-бали.
+                    Create an account to save your favourites
+                    and get a welcome Tammy points bonus.
                 </p>
 
                 <label class="field" for="signupName">
-                    <span class="field__label">Ім’я</span>
+                    <span class="field__label">Name</span>
                     <input id="signupName" type="text" name="name"
-                           placeholder="Ваше ім’я" required />
+                           placeholder="Your name" required />
                 </label>
 
                 <label class="field" for="signupEmail">
@@ -761,15 +765,15 @@
                 </label>
 
                 <label class="field password-field" for="signupPassword">
-                    <span class="field__label">Пароль</span>
+                    <span class="field__label">Password</span>
                     <div class="field__with-icon">
                         <input id="signupPassword" type="password" name="password"
-                               placeholder="Мінімум 8 символів"
+                               placeholder="At least 8 characters"
                                required minlength="8" />
-                        <!-- одне «око» -->
+                        <!-- one “eye” -->
                         <button type="button"
                                 class="password-toggle"
-                                aria-label="Показати пароль">
+                                aria-label="Show password">
                             <span class="password-toggle__icon">👁</span>
                         </button>
                     </div>
@@ -778,155 +782,216 @@
                 <p class="auth-error" id="signupError" aria-live="polite"></p>
 
                 <button class="btn btn-primary btn-primary--wide" type="submit">
-                    Створити акаунт
+                    Create account
                 </button>
+                <!-- NEW: text with link to login -->
+                <p class="auth-switch">
+                    Already have an account?
+                    <button type="button"
+                            class="auth-switch-btn"
+                            data-target="login">
+                        Log in
+                    </button>
+                </p>
             </form>
         </div>
-    </section>
 
-    <!-- ======= АВТОРИЗОВАНИЙ КОРИСТУВАЧ ======= -->
-    <div class="user-view" id="userView" hidden>
-        <nav class="user-tabs">
-            <button class="tab is-active" data-tab="profile">Профіль</button>
-            <button class="tab" data-tab="prefs">Вподобання</button>
-            <button class="tab" data-tab="orders">Замовлення</button>
-            <button class="tab" data-tab="points">Бали</button>
-            <button class="tab" data-tab="settings">Налаштування</button>
-        </nav>
+        <div class="guest-runner">
+            <div class="scene">
 
-        <div class="tab-panels">
-            <!-- Профіль -->
-            <div class="panel" data-panel="profile">
-                <div class="profile-header">
-                    <div class="profile-avatar">
-                        <span class="profile-avatar__initial user-avatar__initial">U</span>
-                    </div>
-                    <div class="profile-main">
-                        <div class="profile-main__row">
-                            <h3 class="profile-name" data-field="name">Користувач</h3>
-                            <span class="profile-badge">Онлайн</span>
+                <!-- Courier -->
+                <div class="guest-runner">
+                    <div class="runner">
+                        <div class="runner-lines">
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </div>
-                        <p class="profile-email" data-field="email">email@example.com</p>
+
+                        <div class="runner-body">
+                            <div class="runner-torso"></div>
+                            <div class="runner-head"></div>
+                            <div class="runner-cap"></div>
+
+                            <div class="runner-bag"></div>
+
+                            <!-- flying box -->
+                            <div class="runner-box"></div>
+
+                            <div class="runner-arm runner-arm--front"></div>
+                            <div class="runner-arm runner-arm--back"></div>
+                        </div>
+
+                        <div class="runner-leg runner-leg--back"></div>
+                        <div class="runner-leg runner-leg--front"></div>
+                    </div>
+
+                    <!-- ROBOT -->
+                    <div class="runner-bot">
+                        <div class="bot-shadow"></div>
+
+                        <div class="bot-body">
+
+                            <div class="bot-head">
+                                <div class="bot-eye"></div>
+                                <div class="bot-eye bot-eye--right"></div>
+                                <div class="bot-antenna"></div>
+                            </div>
+
+                            <div class="bot-chest">
+                                <div class="bot-chip"></div>
+                            </div>
+
+                            <div class="bot-arms">
+                                <div class="bot-arm bot-arm--left"></div>
+                                <div class="bot-arm bot-arm--right"></div>
+                            </div>
+
+                            <div class="bot-legs">
+                                <div class="bot-leg bot-leg--left"></div>
+                                <div class="bot-leg bot-leg--right"></div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-                <ul class="profile-stats">
-                    <li>
-                        <span class="profile-stats__label">Збережені рецепти</span>
-                        <span class="profile-stats__value" id="profileFavCount">0</span>
-                    </li>
-                    <li>
-                        <span class="profile-stats__label">Замовлення</span>
-                        <span class="profile-stats__value" id="profileOrderCount">0</span>
-                    </li>
-                    <li>
-                        <span class="profile-stats__label">Tammy-бали</span>
-                        <span class="profile-stats__value" id="profilePointsBrief">0</span>
-                    </li>
-                </ul>
+            </div>
+        </div>
+    </section>
 
-                <button id="btnLogout" class="btn btn-outline btn-outline--danger logout-btn">
-                    <span>Вийти з акаунту</span>
+    <!-- ======= LOGGED-IN USER ======= -->
+    <div class="user-view" id="userView" hidden>
+        <nav class="user-tabs">
+            <button class="tab is-active" data-tab="profile">Profile</button>
+            <button class="tab" data-tab="prefs">Favourites</button>
+            <button class="tab" data-tab="orders">Orders</button>
+            <button class="tab" data-tab="points">Points</button>
+        </nav>
+
+        <div class="tab-panels">
+            <!-- Profile -->
+            <div class="panel" data-panel="profile">
+                <!-- Main profile card -->
+                <section class="profile-card profile-card--glow profile-anim profile-anim--d1">
+                    <div class="profile-header">
+                        <div class="profile-avatar profile-avatar--glow">
+                            <span class="profile-avatar__initial user-avatar__initial">U</span>
+                        </div>
+                        <div class="profile-main">
+                            <div class="profile-main__row">
+                                <h3 class="profile-name" data-field="name">User</h3>
+                                <span class="profile-badge">Online</span>
+                            </div>
+                            <p class="profile-email" data-field="email">email@example.com</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Beautiful statistics cards -->
+                <section class="profile-metrics">
+                    <div class="metric-card metric-card--recipes profile-anim profile-anim--d1">
+                        <div class="metric-card__top">
+                            <span class="metric-card__icon">⭐</span>
+                            <span class="metric-card__label">Saved recipes</span>
+                        </div>
+                        <div class="metric-card__value" id="profileFavCount">0</div>
+                    </div>
+
+                    <div class="metric-card metric-card--orders profile-anim profile-anim--d2">
+                        <div class="metric-card__top">
+                            <span class="metric-card__icon">🛒</span>
+                            <span class="metric-card__label">Orders</span>
+                        </div>
+                        <div class="metric-card__value" id="profileOrderCount">0</div>
+                    </div>
+
+                    <div class="metric-card metric-card--points profile-anim profile-anim--d3">
+                        <div class="metric-card__top">
+                            <span class="metric-card__icon">🎁</span>
+                            <span class="metric-card__label">Tammy points</span>
+                        </div>
+                        <div class="metric-card__value" id="profilePointsBrief">0</div>
+                    </div>
+                </section>
+
+                <!-- Logout button -->
+                <button id="btnLogout" class="btn btn-outline btn-outline--danger logout-btn profile-anim profile-anim--d4">
+                    <span>Log out of account</span>
                     <span class="logout-icon">↩</span>
                 </button>
             </div>
 
-            <!-- Вподобання -->
-            <div class="panel" data-panel="prefs" hidden>
-                <h3 class="panel-title">Вподобані страви</h3>
-                <p class="panel-sub">
-                    Тут з’являються рецепти, які ви зберегли в конструкторі
-                    через кнопку «Зберегти рецепт у вподобання».
-                </p>
 
-                <div id="savedRecipesList" class="saved-list"></div>
+            <!-- Favourites -->
+            <div class="panel" data-panel="prefs" hidden>
+                <section class="favs-section profile-anim profile-anim--d1">
+                    <h3 class="favs-title">Favourite dishes</h3>
+                    <p class="favs-sub">
+                        Here you’ll see recipes you saved in the builder using the
+                        <b>“Save recipe to favourites”</b> button.
+                    </p>
+
+                    <!-- Empty state / explanation -->
+                    <div class="favs-empty" id="favsEmpty">
+                        ⭐ Your favourites list is empty.<br>
+                        Save your first recipe from the builder!
+                    </div>
+
+                    <!-- List of recipes -->
+                    <div id="savedRecipesList" class="saved-list"></div>
+                </section>
             </div>
 
-            <!-- Замовлення -->
+            <!-- Orders -->
             <div class="panel" data-panel="orders" hidden>
-                <h3 class="panel-title">Останні замовлення</h3>
+                <h3 class="panel-title">Recent orders</h3>
                 <p class="panel-sub">
-                    Переглядайте історію оформлених замовлень Tammy Food.
+                    View the history of Tammy Food orders you’ve placed.
                 </p>
                 <div id="ordersList" class="saved-list"></div>
             </div>
 
-            <!-- Бали -->
+            <!-- Points -->
+
             <div class="panel" data-panel="points" hidden>
                 <div class="points-header">
                     <button class="points-pill" id="pointsBadge" type="button">
                         <span class="points-pill__icon">🎁</span>
                         <span id="pointsValue">0</span>
-                        <span>балів</span>
+                        <span>points</span>
                     </button>
                     <p class="points-caption">
-                        Натисніть на бейдж, щоб побачити, як працюють Tammy-бали.
+                        Click the badge to see how Tammy points work.
                     </p>
                 </div>
 
-                <!-- інструкція відкривається по кліку на бейдж -->
+                <!-- instructions open on badge click -->
                 <div id="pointsFaq" class="points-faq" hidden>
-                    <h4>Як заробляти бали?</h4>
+                    <h4>How to earn points?</h4>
                     <ul>
-                        <li><b>+125 балів</b> — вітальний бонус за реєстрацію.</li>
-                        <li><b>+5 балів</b> — за кожен збережений рецепт з конструктора.</li>
-                        <li><b>1 бал за 10 ₴</b> — за оплачені замовлення.</li>
+                        <li><b>+125 points</b> — welcome bonus for registration.</li>
+                        <li><b>+5 points</b> — for every saved recipe from the builder.</li>
+                        <li><b>1 point per 10 ₴</b> — for paid orders.</li>
                     </ul>
-                    <h4>Як витрачати?</h4>
+                    <h4>How to spend them?</h4>
                     <ul>
-                        <li>Оплата частини замовлення балами.</li>
-                        <li>Спеціальні страви або напої за бали.</li>
+                        <li>Pay part of the order with points.</li>
+                        <li>Special dishes or drinks for points.</li>
                     </ul>
                 </div>
 
-                <h4 class="points-history-title">Історія балів</h4>
+                <h4 class="points-history-title">Points history</h4>
                 <div id="pointsHistory" class="points-history"></div>
             </div>
 
-            <!-- Налаштування -->
-            <div class="panel" data-panel="settings" hidden>
-                <h3 class="panel-title">Налаштування</h3>
-                <p class="panel-sub">
-                    Персоналізуйте вигляд Tammy Food під себе.
-                </p>
 
-                <div class="settings-card">
-                    <h4>Тема</h4>
-                    <label class="switch-row">
-                        <input type="checkbox" id="toggleDark">
-                        <span class="switch-faux"></span>
-                        <span class="switch-label">Темна тема</span>
-                    </label>
-                </div>
-
-                <div class="settings-card">
-                    <h4>Повідомлення</h4>
-                    <label class="switch-row">
-                        <input type="checkbox" id="toggleEmailNews">
-                        <span class="switch-faux"></span>
-                        <span class="switch-label">Отримувати акційні email-розсилки</span>
-                    </label>
-                </div>
-
-                <div class="settings-card settings-card--danger">
-                    <h4>Дані пристрою</h4>
-                    <p class="settings-note">
-                        Очистити кешовані вподобання, замовлення та локальні налаштування
-                        на цьому пристрої.
-                    </p>
-                    <button id="btnClearDemo"
-                            class="btn btn-outline btn-outline--danger">
-                        Очистити локальні дані
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </aside>
 
-<!-- Затемнення -->
+<!-- Scrim -->
 <div class="scrim" id="scrim" hidden></div>
-
 
 <!-- Libs -->
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

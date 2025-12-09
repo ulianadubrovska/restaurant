@@ -773,7 +773,28 @@ a{ color:inherit; text-decoration:none; }
 
 .menu-card__back h4{ margin:6px 0 8px; font-size:18px; color:#3C3C3C; }
 .menu-card__back p{ margin:0 0 10px; color:#667085; line-height:1.6; font-size:13px; }
-.menu-card__ul{ margin:8px 0 0; padding-left:18px; color:#3C3C3C; font-size:13px; line-height:1.6; }
+/* список інгредієнтів на звороті картки */
+.menu-card__ul{
+    margin:8px 0 0;
+    padding-left:18px;
+    color:#3C3C3C;
+    font-size:13px;
+    line-height:1.5;
+
+    /* 🔸 дві колонки */
+    columns: 2;
+    column-gap: 14px;
+
+    /* 🔸 щоб картка не росла вниз нескінченно */
+    max-height: 110px;       /* підбереш значення під свій дизайн */
+    overflow-y: auto;        /* скрол, якщо інгредієнтів дуже багато */
+}
+
+/* щоб елементи не рвалися між колонками */
+.menu-card__ul li{
+    break-inside: avoid;
+}
+
 .menu-card__price{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; }
 .menu-card__hint{ font-size:12px; color:#B85C6E; opacity:.9; }
 
@@ -832,7 +853,7 @@ a{ color:inherit; text-decoration:none; }
 /* підказка лише на пристроях з hover */
 @media (hover:hover){
     .menu-card__front::after{
-        content:"Натисни, щоб дізнатись більше";
+        content:"Click to learn more";
         position:absolute; left:12px; right:12px; bottom:64px;
         padding:1px 10px; font-size:12px; font-weight:600;
         color:#731536; background:rgba(255,240,242,.92);
@@ -875,8 +896,8 @@ a{ color:inherit; text-decoration:none; }
 .rating-stars .star.is-active{ color:#731536; text-shadow:0 1px 3px rgba(115,21,54,.25); }
 .rating-stars .star:focus{ outline:none; }
 
-.menu-card__back .menu-card__long { margin: 6px 0 10px; line-height: 1.4; }
-.menu-card__back .menu-card__ul { margin-top: 6px; }
+.menu-card__back .menu-card__long { margin: 6px 0 8px; line-height: 1.4; }
+.menu-card__back .menu-card__ul { margin-top: 4px; }
 
 
 /* Pagination */
@@ -1300,6 +1321,81 @@ a{ color:inherit; text-decoration:none; }
     box-shadow:0 4px 14px rgba(115,21,54,.08);
     position:relative;
 }
+/* ============================
+   PRIMARY BUTTON: Get recipe
+   ============================ */
+
+/* ============================
+   PRIMARY BUTTON: Get recipe
+   ============================ */
+/* === GET RECIPE BUTTON (з блискавкою + крутилкою) === */
+#generateRecipeBtn {
+    position: relative;
+    width: 100%;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 12px 20px;
+    border: none;
+    background: linear-gradient(135deg,#731536,#b42154);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+            transform .16s ease,
+            box-shadow .2s ease,
+            background .25s ease,
+            opacity .2s ease;
+}
+
+#generateRecipeBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(115,21,54,.35);
+    background: linear-gradient(135deg,#8d1942,#c0215b);
+}
+
+#generateRecipeBtn .btn-icon {
+    font-size: 18px;
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+/* --- loading-стан (коли AI генерує рецепт) --- */
+#generateRecipeBtn.is-loading {
+    cursor: default;
+    opacity: .9;
+    box-shadow: none;
+}
+
+/* ховаємо блискавку */
+#generateRecipeBtn.is-loading .btn-icon {
+    opacity: 0;
+    transform: scale(.6);
+}
+
+/* показуємо спінер зліва */
+#generateRecipeBtn.is-loading::after {
+    content: "";
+    position: absolute;
+    left: 18px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-right-color: transparent;
+    animation: spin .9s linear infinite;
+}
+
+/* якщо хочеш ще й текст міняти */
+
+/* вже є вище, але якщо немає – додай */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .chef-tip::before,
 .ai-suggestion::before{
     content:"💡";
@@ -1375,6 +1471,29 @@ a{ color:inherit; text-decoration:none; }
     font-size:14px; color:#5b2140;
     opacity:.9;
 }
+/* Коли AI генерує рецепт */
+.builder-busy .ingredient-card {
+    opacity: 0.4;
+    pointer-events: none; /* не клікаються */
+}
+
+/* Вибрані інгредієнти залишаються яскравими */
+.builder-busy .ingredient-card.selected {
+    opacity: 1;
+}
+
+/* (опційно) блокуємо кнопки, щоб юзер не спамив */
+.builder-busy #generateRecipeBtn,
+.builder-busy #randomDish,
+.builder-busy #surpriseBtn,
+.builder-busy #clearPicked,
+.builder-busy #builderCheckout,
+.builder-busy #saveRecipeBtn {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: default;
+}
+
 .chef-story {
     font-size:15px;       /* опис став читабельнішим */
     line-height:1.6;
@@ -1472,7 +1591,7 @@ a{ color:inherit; text-decoration:none; }
     color: #52414a;
     font-size: 16.5px;
     line-height: 1.6;
-    max-width: 620px;
+    max-width: 580px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -1487,9 +1606,9 @@ a{ color:inherit; text-decoration:none; }
 
 .cta-builder__actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: center;
+    flex-direction: column;   /* 🔥 ставимо все вертикально */
+    align-items: center;       /* центр по горизонталі */
+    gap: 16px;                 /* проміжок між елементами */
     margin-bottom: 8px;
 }
 
@@ -1550,10 +1669,15 @@ a{ color:inherit; text-decoration:none; }
     }
 }
 
+.cta-builder p,
+.cta-builder__note {
+    word-break: break-word;
+}
 
 .cta-builder .btn-primary {
     position: relative;
-    min-width: 260px;
+    min-width: 200px;
+    max-width: 100%;
     padding: 15px 32px 15px 38px;
     border-radius: 18px;
     border: none;
@@ -1939,7 +2063,7 @@ a{ color:inherit; text-decoration:none; }
 .ai-chef__recipe {
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
-    gap: 18px 24px;
+    gap: 0 24px;
     align-items: flex-start;
     animation: fadeUp 0.6s ease-out;
 }
@@ -2045,25 +2169,13 @@ a{ color:inherit; text-decoration:none; }
     font-size: 14px;
     line-height: 1.55;
 }
-
-/* рейтинг у результаті */
-.ai-chef__recipe .rating {
-    margin-top: 6px;
+/* Ховаємо блок кроків */
+.ai-chef__steps,
+.ai-chef__body h4:nth-of-type(2) {
+    display: none !important;
 }
 
-.ai-chef__recipe .rating .star {
-    cursor: pointer;
-    font-size: 20px;
-    color: #e0c8d2;
-    transition: transform 0.1s ease, color 0.18s ease;
-}
 
-.ai-chef__recipe .rating .star.active,
-.ai-chef__recipe .rating .star:hover,
-.ai-chef__recipe .rating .star:hover ~ .star {
-    color: #feb918;
-    transform: translateY(-2px);
-}
 
 /* loader для результату */
 .ai-chef__result.loading {
@@ -2153,6 +2265,582 @@ a{ color:inherit; text-decoration:none; }
     letter-spacing: 0.14em;
 }
 
+/* === AI HEAD CHEF =================================================== */
+
+.ai-chef {
+    padding: 16px 0 80px;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+}
+
+/* на всяк випадок прибираємо старий рожевий фон секції */
+.ai-chef::before {
+    content: none !important;
+}
+
+.ai-chef .container,
+.ai-chef.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* заголовок секції */
+.ai-chef__intro {
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s ease-out;
+}
+
+.ai-chef__intro h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: #731536;
+    letter-spacing: -0.3px;
+    text-shadow: none;
+}
+
+.ai-chef__intro p {
+    max-width: 520px;
+    margin: 0 auto;
+    color: #5b4b54;
+    line-height: 1.6;
+}
+
+/* сітка: зліва форма, справа результат */
+.ai-chef__grid {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* картки форми та результату */
+.ai-chef__prefs,
+.ai-chef__result {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 22px 20px 20px;
+    box-shadow:
+            0 12px 30px rgba(0,0,0,0.06),
+            0 0 0 1px rgba(255,255,255,0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+/* легкий лайт-ефект по борту при наведенні */
+.ai-chef__prefs::before,
+.ai-chef__result::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 0 0, rgba(255,185,218,0.18), transparent 60%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.ai-chef__prefs:hover::before,
+.ai-chef__result:hover::before {
+    opacity: 1;
+}
+
+/* заголовок у формі */
+.ai-chef__prefs h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #9a6a7b;
+}
+
+/* маленький хінт під заголовком */
+.ai-chef__hint {
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #8b7380;
+}
+
+/* поля форми */
+.ai-chef .field {
+    margin-bottom: 10px;
+}
+
+.ai-chef .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #8c6b78;
+}
+
+.ai-chef .field input[type="number"],
+.ai-chef .field input[type="text"],
+.ai-chef .field textarea,
+.ai-chef .field select {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e2d8de;
+    padding: 8px 10px;
+    font-size: 14px;
+    outline: none;
+    background: #fdfafc;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.ai-chef .field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.ai-chef .field input:focus,
+.ai-chef .field textarea:focus,
+.ai-chef .field select:focus {
+    border-color: #c82257;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(200,34,87,0.12);
+}
+
+/* дві колонки у формі */
+.ai-chef .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+}
+
+/* чіпси кухонь / обладнання */
+.ai-chef .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ai-chef .chip {
+    border: 1px solid #e3d3da;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    background: #fdf8fb;
+    color: #6a4c59;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.1s ease;
+}
+
+.ai-chef .chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+}
+
+.ai-chef .chip.active {
+    background: linear-gradient(135deg, #731536, #a51c4b);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(115,21,54,0.35);
+}
+
+/* taste levels (крапочки) */
+.ai-chef .field-taste {
+    margin-bottom: 10px;
+}
+
+.ai-chef .taste-scale {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.ai-chef .taste-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid #c82257;
+    background: #fff;
+    color: #c82257;
+    font-size: 11px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: background 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.1s ease, opacity 0.18s ease;
+}
+
+.ai-chef .taste-dot:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    opacity: 1;
+}
+
+.ai-chef .taste-dot.is-active {
+    background: linear-gradient(135deg, #feb918, #c82257);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 14px rgba(200,34,87,0.35);
+    opacity: 1;
+}
+
+.ai-chef .taste-hint {
+    margin-top: 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #9b7c89;
+}
+
+/* слайдери смаку */
+.ai-chef input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #feb918, #c82257);
+    outline: none;
+    margin-top: 2px;
+}
+
+.ai-chef input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #c82257;
+    box-shadow: 0 0 0 3px rgba(200,34,87,0.2);
+    cursor: pointer;
+}
+
+.ai-chef input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #c82257;
+    box-shadow: 0 0 0 3px rgba(200,34,87,0.2);
+    cursor: pointer;
+}
+
+/* кнопки внизу форми */
+.ai-chef .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.ai-chef .btn-primary {
+    flex: 1 1 180px;
+}
+
+.ai-chef .btn-ghost {
+    flex: 0 0 auto;
+}
+
+/* плейсхолдер результату */
+.ai-chef__result .placeholder {
+    text-align: center;
+    padding: 26px 16px;
+    color: #7e6a76;
+    animation: fadeUp 0.7s ease-out;
+}
+
+.ai-chef__result .placeholder h3 {
+    margin-bottom: 8px;
+}
+
+/* бейдж "AI рецепт" над результатом */
+.ai-chef__result .ai-chef__recipe::before {
+    content: "AI рецепт";
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fff3f8;
+    color: #a51c4b;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+/* картка згенерованого рецепта – ТЕПЕР КОЛОНКА, ФОТО ВНИЗУ */
+.ai-chef__recipe {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    animation: fadeUp 0.6s ease-out;
+}
+
+/* текстова частина зверху */
+.ai-chef__body {
+    order: 1;
+    margin-bottom: 6px;
+}
+
+.ai-chef__body h3 {
+}
+
+.ai-chef__body > p {
+    margin-bottom: 10px;
+    color: #52414a;
+}
+
+/* мета-бейджі (час, ккал, FitScore) */
+.ai-chef__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.ai-chef__meta .pill {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: #fff3f8;
+    color: #a51c4b;
+    border: 1px solid rgba(165,28,75,0.18);
+}
+
+/* інгредієнти */
+.ai-chef__ingredients {
+    list-style: none;
+    padding-left: 0;
+    margin: 4px 0 16px;
+}
+/* Базовий рядок інгредієнта */
+.ai-chef__ingredients li{
+    position: relative;
+    padding: 4px 0;
+    transition: background-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+/* Стан після заміни */
+.ai-chef__ingredients li.replaced{
+    background: #FFF4F8;
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(186, 24, 74, 0.08);
+    animation: ingredientPulse .55s ease-out;
+}
+
+/* Рожевий маркер зліва */
+.ai-chef__ingredients li.replaced::before{
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #BE185D, #F973A0);
+    opacity: 0.8;
+}
+
+/* Легка пульсація при заміні */
+@keyframes ingredientPulse{
+    0%{
+        transform: translateY(-2px) scale(0.97);
+        box-shadow: 0 0 0 0 rgba(190, 24, 93, 0.35);
+    }
+    60%{
+        transform: translateY(-1px) scale(1.02);
+        box-shadow: 0 0 0 6px rgba(190, 24, 93, 0.0);
+    }
+    100%{
+        transform: translateY(-1px) scale(1);
+        box-shadow: 0 0 0 0 rgba(190, 24, 93, 0.0);
+    }
+}
+.replace-btn.is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.ai-chef__ingredients li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 14px;
+    border-bottom: 1px dashed rgba(0,0,0,0.04);
+}
+
+.ai-chef__ingredients li:last-child {
+    border-bottom: none;
+}
+
+.ai-chef__ingredients .badge-forbidden {
+    font-size: 16px;
+}
+
+.ai-chef__ingredients .replace-btn {
+    margin-left: auto;
+    border: none;
+    background: none;
+    font-size: 12px;
+    color: #a51c4b;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+/* КРОКИ – ПОВНІСТЮ ХОВАЄМО */
+.ai-chef__steps,
+.ai-chef__body h4:nth-of-type(2) {
+    display: none !important;
+}
+
+/* фото-картка знизу */
+.ai-chef__photo {
+    order: 2;
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    background: radial-gradient(circle at 30% 0, #ffe6f0 0, #f8dfe7 45%, #f7f0f5 95%);
+    min-height: 200px;
+}
+
+.ai-chef__photo img {
+    width: 100%;
+    height: auto;
+    max-height: 260px;
+    object-fit: cover;
+    display: block;
+    transform-origin: center;
+    animation: floatPulse 7s ease-in-out infinite;
+}
+
+/* бейдж "AI dish" на фото */
+.ai-chef__photo::after {
+    content: "AI DISH";
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.58);
+    color: #fff;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* рейтинг у результаті */
+.ai-chef__recipe .rating {
+    margin-top: 6px;
+}
+
+.ai-chef__recipe .rating p {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: #6c5964;
+}
+
+.ai-chef__recipe .rating .star {
+    cursor: pointer;
+    font-size: 20px;
+    color: #e0c8d2;
+    transition: transform 0.1s ease, color 0.18s ease;
+}
+
+/* активна або наведена зірка */
+.ai-chef__recipe .rating .star.active,
+.ai-chef__recipe .rating .star.hover {
+    color: #731536; /* бордовий */
+    transform: translateY(-2px);
+}
+.ai-chef__ingredients li.replaced {
+    background: #fff3f8;
+    transition: background 0.3s ease;
+}
+
+/* loader у правій картці */
+.ai-chef__result.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+}
+
+.ai-chef__result .loader {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    border: 4px solid rgba(115,21,54,0.12);
+    border-top-color: #c82257;
+    animation: spin 0.9s linear infinite;
+    position: relative;
+}
+
+.ai-chef__result .loader::after {
+    content: "Готуємо ідею…";
+    position: absolute;
+    left: 50%;
+    top: 120%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 13px;
+    color: #7e6a76;
+}
+
+/* анімації */
+@keyframes fadeUp {
+    0%   { opacity: 0; transform: translateY(14px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatPulse {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-6px) scale(1.02); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* адаптив */
+@media (max-width: 960px) {
+    .ai-chef__grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .ai-chef {
+        padding-top: 12px;
+        padding-bottom: 72px;
+    }
+}
+
+@media (max-width: 700px) {
+    .ai-chef__prefs,
+    .ai-chef__result {
+        padding: 18px 16px 18px;
+    }
+
+    .ai-chef__recipe {
+        gap: 16px;
+    }
+
+    .ai-chef__photo {
+        max-width: 260px;
+        margin: 0 auto 4px;
+    }
+}
+/* === /AI HEAD CHEF ================================================== */
 
 
 /* ===== Footer ===== */
@@ -2710,6 +3398,24 @@ main{
     gap:6px;
 }
 
+.cart-ai-tag {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    background: #fdf2ff;
+    color: #7e22ce;
+    font-weight: 600;
+}
+
+.cart-ai-desc {
+    font-size: 13px;
+    color: #4b5563;
+    margin-top: 2px;
+}
+
 .cart-title-row{
     display:flex;
     align-items:flex-start;
@@ -2766,10 +3472,110 @@ main{
 .cart-qty{
     font-weight:500;
 }
+/* Block for custom builder dishes inside cart */
+/* Бейдж залишаємо як є, тільки для гармонії шрифт трохи менший */
+.cart-builder-tag {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    background: #fff4e8;
+    color: #b05509;
+    font-weight: 600;
+}
+
+/* Назва + бейдж в одному рядку */
+.cart-title-main{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+/* Рядок з інгредієнтами (без чіпсів, просто текст) */
+.cart-builder-line{
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #7f1d38; /* ніжний бордовий */
+    line-height: 1.4;
+}
+
+.cart-builder-label-text{
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: 10px;
+    color: #b45371;  /* світліший бордовий */
+    margin-right: 6px;
+}
+
+
+
+
+.cart-builder-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.cart-builder-ingredients {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.cart-builder-chip {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #fff;
+    border: 1px solid rgba(115, 21, 54, 0.16);
+    white-space: nowrap;
+}
+
+.cart-builder-kcal {
+    font-size: 11px;
+    color: #777;
+}
+
 .cart-item-total{
     margin-left:6px;
     font-weight:600;
     color:#B85C6E;
+}
+/* Коли немає фото — робимо красивий відступ */
+.cart-item.no-photo .cart-thumb {
+    width: 0;
+}
+
+.cart-item.no-photo .cart-main {
+    margin-left: 0;
+    padding-left: 4px; /* щоб не липло вліво */
+}
+
+.cart-item.no-photo .cart-title-row h4 {
+    margin-left: 0;
+}
+
+.cart-item.no-photo .cart-item-desc {
+    margin-left: 0;
+}
+
+/* Зменшуємо відступи, щоб текст був “в стовпчик” красиво */
+.cart-item.no-photo .cart-bottom-row {
+    padding-left: 0;
+}
+/* Картка без фото (конструктор) – повна ширина тексту */
+.cart-item.no-photo{
+    grid-template-columns: 1fr; /* одна колонка замість 80px + 1fr */
+    gap: 10px;
 }
 
 /* кількість */
@@ -2864,6 +3670,71 @@ main{
         height:70px;
         border-radius:20px;
     }
+}
+/* ===== Tammy points in cart ===== */
+.cart-points-block{
+    margin:10px 0 16px;
+    padding:10px 14px 12px;
+    border-radius:20px;
+    background:#FDF2F7;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.cart-summary-row--points{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:#4B5563;
+}
+
+.cart-summary-row--points span:last-child{
+    font-weight:700;
+    color:#731536;
+}
+
+.cart-points-controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.cart-points-label{
+    font-size:13px;
+    color:#4B5563;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.cart-points-label input{
+    width:90px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid #E5E7EB;
+    font-size:13px;
+    font-family:inherit;
+}
+
+.cart-points-label input:focus{
+    outline:none;
+    border-color:#731536;
+    box-shadow:0 0 0 1px rgba(115,21,54,0.18);
+}
+
+.btn-ghost--tiny{
+    padding:6px 14px;
+    font-size:12px;
+    border-radius:999px;
+}
+
+.cart-points-info{
+    margin:0;
+    font-size:12px;
+    color:#6B7280;
 }
 
 
@@ -2979,17 +3850,475 @@ main{
 .guest-view{
     padding:14px 16px 18px;
     overflow:auto;
+    position:relative;            /* запас знизу під орбіту */
 }
+/* ====== RUNNER ====== */
+/* ====== RUNNER + ROBOT ====== */
+.guest-runner{
+    margin-top:18px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    gap:36px;
+    min-height:120px;
+}
+
+/* === COURIER === */
+
+.runner{
+    position:relative;
+    width:120px;
+    height:120px;
+}
+
+/* швидкі лінії позаду */
+.runner-lines{
+    position:absolute;
+    left:-26px;
+    top:50%;
+    transform:translateY(-20%);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+.runner-lines span{
+    display:block;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,192,211,.7);
+    animation:runnerLines 0.6s linear infinite;
+}
+.runner-lines span:nth-child(1){ width:26px; animation-delay:0s; }
+.runner-lines span:nth-child(2){ width:18px; animation-delay:.12s; }
+.runner-lines span:nth-child(3){ width:10px; animation-delay:.24s; }
+
+@keyframes runnerLines{
+    from{ transform:translateX(0); opacity:1; }
+    to  { transform:translateX(-10px); opacity:0; }
+}
+
+/* блок із тілом */
+.runner-body{
+    position:absolute;
+    left:50%;
+    top:46%;
+    transform:translate(-50%, -40%);
+}
+
+/* невеликий тулуб */
+.runner-torso{
+    width:40px;
+    height:32px;
+    border-radius:18px;
+    background:linear-gradient(135deg,#ffb4c7,#ffe1ea);
+    box-shadow:0 4px 10px rgba(0,0,0,.06);
+}
+
+/* голова + кепка */
+.runner-head{
+    position:absolute;
+    top:-30px;
+    left:4px;
+    width:22px;
+    height:22px;
+    border-radius:999px;
+    background:#ffd1aa;
+    box-shadow:0 4px 8px rgba(0,0,0,.08);
+}
+.runner-cap{
+    position:absolute;
+    top:-36px;
+    left:2px;
+    width:28px;
+    height:10px;
+    border-radius:12px;
+    background:var(--brand);
+}
+.runner-cap::after{
+    content:"";
+    position:absolute;
+    left:10px;
+    top:8px;
+    width:16px;
+    height:5px;
+    border-radius:10px;
+    background:#a4215a;
+}
+
+/* РЮКЗАК – повертаємо м’якший колір */
+/* бордовий рюкзак (м'який, як на 2 фото але правильного кольору) */
+.runner-bag{
+    position:absolute;
+    top:2px;
+    left:-22px;                     /* ближче до тулуба, не налазить */
+    width:26px;
+    height:28px;
+    border-radius:12px 6px 6px 12px;/* зліва заокруглений, справа більш плаский */
+    background:linear-gradient(135deg,#731536,#a4215a);
+    box-shadow:0 6px 12px rgba(115,21,54,.35);
+    z-index:-1;                     /* ховається за тулубом */
+}
+
+
+/* коробка з їжею, що летить до робота */
+.runner-box{
+    position:absolute;
+    right:-30px;
+    top:-2px;
+    width:34px;
+    height:26px;
+    border-radius:8px;
+    background:#ffb648;
+    box-shadow:0 6px 14px rgba(255,182,72,.55);
+    animation:boxThrow 1.4s ease-in-out infinite;
+}
+.runner-box::after{
+    content:"";
+    position:absolute;
+    inset:5px;
+    border-radius:6px;
+    border:2px solid rgba(255,255,255,.7);
+}
+/* невеликий «хвостик» від коробки */
+.runner-box::before{
+    content:"";
+    position:absolute;
+    left:-10px;
+    top:50%;
+    width:10px;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,238,204,.9);
+    transform:translateY(-50%);
+    filter:blur(1px);
+    opacity:0;
+    animation:boxTrail 1.4s ease-in-out infinite;
+}
+
+@keyframes boxThrow{
+    0%{
+        transform:translate(0,0) rotate(-6deg);
+    }
+    30%{
+        transform:translate(35px,-18px) rotate(4deg); /* майже біля робота */
+    }
+    55%{
+        transform:translate(55px,-8px) rotate(12deg); /* пік польоту */
+    }
+    80%{
+        transform:translate(35px,-2px) rotate(0deg);
+    }
+    100%{
+        transform:translate(0,0) rotate(-6deg); /* повертається плавно */
+    }
+}
+
+/* хвостик коробки – тепер довший і повільніший */
+@keyframes boxTrail{
+    0%{
+        opacity:0;
+        transform:translate(-2px,-50%);
+    }
+    30%{
+        opacity:1;
+        transform:translate(-12px,-50%);
+    }
+    55%{
+        opacity:.6;
+        transform:translate(-18px,-50%);
+    }
+    80%{
+        opacity:.2;
+        transform:translate(-8px,-50%);
+    }
+    100%{
+        opacity:0;
+        transform:translate(-2px,-50%);
+    }
+}
+
+
+/* руки – трохи «реальніші» */
+.runner-arm{
+    position:absolute;
+    border-radius:999px;
+    background:var(--brand);
+    transform-origin:left center;
+}
+.runner-arm::after{                 /* маленька «кисть» тілесного кольору */
+    content:"";
+    position:absolute;
+    right:-6px;
+    top:1px;
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#ffd1aa;
+}
+
+/* передня рука – до коробки */
+.runner-arm--front{
+    top:6px;
+    left:16px;
+    width:26px;
+    height:11px;
+    animation:runnerArmFront 0.7s ease-in-out infinite;
+}
+/* задня – відмахування назад */
+.runner-arm--back{
+    top:4px;
+    left:14px;
+    width:22px;
+    height:10px;
+    opacity:.88;
+    filter:brightness(.95);
+    animation:runnerArmBack 0.7s ease-in-out infinite;
+}
+
+
+@keyframes runnerArmFront{
+    0%,100%{ transform:rotate(8deg); }
+    40%    { transform:rotate(26deg); }
+    60%    { transform:rotate(32deg); }
+}
+
+@keyframes runnerArmBack{
+    0%,100%{ transform:rotate(-24deg); }
+    50%    { transform:rotate(-8deg); }
+}
+
+/* ноги */
+.runner-leg{
+    position:absolute;
+    bottom:16px;
+    left:50%;
+    width:34px;
+    height:8px;
+    border-radius:999px;
+    background:var(--brand);
+    box-shadow:0 9px 16px rgba(0,0,0,.12);
+    transform-origin:10% 50%;
+}
+.runner-leg--front{
+    animation:runnerLegFront .6s ease-in-out infinite;
+}
+.runner-leg--back{
+    filter:brightness(.9);
+    opacity:.9;
+    animation:runnerLegBack .6s ease-in-out infinite;
+}
+
+@keyframes runnerLegFront{
+    0%,100%{ transform:translate(-40%,0) rotate(12deg); }
+    50%    { transform:translate(-22%,0) rotate(-18deg); }
+}
+@keyframes runnerLegBack{
+    0%,100%{ transform:translate(-10%,0) rotate(-20deg); }
+    50%    { transform:translate(-32%,0) rotate(14deg); }
+}
+
+/* === ROBOT === */
+
+.runner-bot{
+    position:relative;
+    width:90px;
+    height:110px;
+    animation:botHop 0.7s ease-in-out infinite;
+}
+.bot-shadow{
+    position:absolute;
+    bottom:10px;
+    left:8px;
+    width:70px;
+    height:10px;
+    border-radius:999px;
+    background:rgba(0,0,0,.06);
+    filter:blur(3px);
+}
+.bot-body{
+    position:absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+/* голова робота */
+.bot-head{
+    position:relative;
+    width:42px;
+    height:22px;
+    border-radius:12px;
+    background:#ffe6f0;
+    border:1px solid #f0b6c9;
+    margin:0 auto 4px;
+}
+.bot-eye{
+    position:absolute;
+    top:7px;
+    left:11px;
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:#731536;
+    box-shadow:0 0 6px rgba(115,21,54,.5);
+}
+.bot-eye--right{
+    left:24px;
+}
+.bot-antenna{
+    position:absolute;
+    top:-10px;
+    left:50%;
+    width:2px;
+    height:10px;
+    background:#f0b6c9;
+    transform:translateX(-50%);
+}
+.bot-antenna::after{
+    content:"";
+    position:absolute;
+    top:-4px;
+    left:-3px;
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#ffb648;
+    box-shadow:0 0 8px rgba(255,182,72,.7);
+}
+
+/* корпус */
+.bot-chest{
+    width:50px;
+    height:30px;
+    border-radius:12px;
+    background:#fff0f2;
+    border:1px solid #f0b6c9;
+    box-shadow:0 6px 12px rgba(0,0,0,.06);
+    margin:0 auto 4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.bot-chip{
+    width:18px;
+    height:12px;
+    border-radius:6px;
+    background:linear-gradient(135deg,#ffb648,#ffdf9a);
+    position:relative;
+    animation:botChipPulse 1.4s ease-in-out infinite;
+}
+.bot-chip::before,
+.bot-chip::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:7px;
+    height:2px;
+    border-radius:2px;
+    background:#f4b1a8;
+}
+.bot-chip::before{ left:-7px; }
+.bot-chip::after { right:-7px; }
+
+/* руки робота */
+.bot-arms{
+    position:absolute;
+    top:22px;
+    left:50%;
+    width:70px;
+    transform:translateX(-50%);
+    display:flex;
+    justify-content:space-between;
+}
+.bot-arm{
+    width:14px;
+    height:4px;
+    border-radius:999px;
+    background:#f0b6c9;
+    transform-origin:0 50%;
+}
+.bot-arm--left{
+    animation:botArmLeft .7s ease-in-out infinite;
+}
+.bot-arm--right{
+    animation:botArmRight .7s ease-in-out infinite;
+}
+
+/* ніжки робота */
+.bot-legs{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+.bot-leg{
+    width:14px;
+    height:6px;
+    border-radius:999px;
+    background:#731536;
+    box-shadow:0 4px 8px rgba(0,0,0,.12);
+}
+.bot-leg--left{
+    animation:botLegLeft .7s ease-in-out infinite;
+}
+.bot-leg--right{
+    animation:botLegRight .7s ease-in-out infinite;
+}
+
+@keyframes botHop{
+    0%,100%{ transform:translateY(0); }
+    50%    { transform:translateY(-6px); }
+}
+@keyframes botArmLeft{
+    0%,100%{ transform:rotate(-12deg); }
+    50%    { transform:rotate(10deg); }
+}
+@keyframes botArmRight{
+    0%,100%{ transform:rotate(14deg); }
+    50%    { transform:rotate(-10deg); }
+}
+@keyframes botLegLeft{
+    0%,100%{ transform:translateY(0) rotate(-8deg); }
+    50%    { transform:translateY(-2px) rotate(10deg); }
+}
+@keyframes botLegRight{
+    0%,100%{ transform:translateY(-2px) rotate(10deg); }
+    50%    { transform:translateY(0) rotate(-8deg); }
+}
+@keyframes botChipPulse{
+    0%,100%{
+        box-shadow:0 0 0 0 rgba(255,182,72,.0);
+        transform:scale(1);
+    }
+    50%{
+        box-shadow:0 0 14px 4px rgba(255,182,72,.45);
+        transform:scale(1.05);
+    }
+}
+
+/* трохи зменшуємо на дуже вузьких екранах */
+@media (max-width: 420px){
+    .guest-runner{
+        transform:scale(.9);
+        gap:24px;
+    }
+}
+
 
 /* ====== GUEST VIEW (герой + кнопки) ====== */
 .user-hero{
     margin-bottom:12px;
+    position:relative;             /* місце під тарілку знизу */
 }
 .user-hero__title{
     margin:0 0 4px;
     font-size:20px;
-    font-weight:700;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-shadow:
+            0 0 6px rgba(115, 21, 54, .35),
+            0 0 16px rgba(115, 21, 54, .25);
 }
+
 .user-hero__subtitle{
     margin:0 0 12px;
     font-size:13px;
@@ -2997,11 +4326,18 @@ main{
 }
 
 /* орбіта з «тарілкою» */
+.guest-orbit-bottom{
+    position:absolute;
+    left:50%;
+    bottom:42px;                  /* не в самому низу, трошки вище */
+    transform:translateX(-50%);
+    pointer-events:none;          /* щоб не заважала клікам по формі */
+}
 .user-hero__orbit{
     position:relative;
-    width:120px;
-    height:120px;
-    margin:6px 0 4px;
+    width:160px;
+    height:160px;
+    margin:0 auto;
     border-radius:999px;
     border:1px dashed #F0BECF;
     display:flex;
@@ -3009,30 +4345,79 @@ main{
     justify-content:center;
     animation:orbitPulse 4s infinite ease-in-out;
 }
+.user-hero__orbit::before{
+    content:"";
+    position:absolute;
+    inset:22px;
+    border-radius:inherit;
+    background:radial-gradient(circle at 50% 60%, #ffd7e4 0, rgba(255,215,228,0) 60%);
+    opacity:.9;
+    filter:blur(2px);
+    z-index:-1;
+}
+.user-hero__orbit::after{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border-radius:inherit;
+    border:1px dashed rgba(255,255,255,.55);
+    opacity:.7;
+    animation:ringSpin 18s linear infinite;
+}
 .orbit-center{
-    width:64px;
-    height:64px;
+    width:72px;
+    height:72px;
     border-radius:999px;
     background:var(--brand);
     display:grid;
     place-items:center;
-    box-shadow:0 12px 22px rgba(115,21,54,.35);
+    box-shadow:0 18px 26px rgba(115,21,54,.35);
+    animation:dishFloat 5.5s ease-in-out infinite alternate;
 }
 .orbit-center__icon{
-    font-size:26px;
+    font-size:28px;
     transform:translateY(1px);
+}
+/* маленьке світіння навколо орбіти як деталь */
+.user-hero__orbit::after{
+    content:"";
+    position:absolute;
+    inset:16px;
+    border-radius:inherit;
+    box-shadow:0 0 0 0 rgba(255,192,203,.4);
+    animation:orbitGlow 4.5s ease-out infinite;
 }
 .orbit-dot{
     position:absolute;
-    width:14px;
-    height:14px;
     border-radius:999px;
     background:#FFF0F2;
     border:1px solid #E8CCD3;
+    box-shadow:0 4px 10px rgba(0,0,0,.04);
 }
-.orbit-dot--1{ top:10px; left:20px; animation:orbitDot1 6s infinite linear; }
-.orbit-dot--2{ top:18px; right:12px; animation:orbitDot2 7s infinite linear; }
-.orbit-dot--3{ bottom:8px; left:40px; animation:orbitDot3 5.5s infinite linear; }
+.orbit-dot--1{ width:14px; height:14px; top:18px; left:34px; animation:orbitDot1 6s infinite ease-in-out; }
+.orbit-dot--2{ width:11px; height:11px; top:26px; right:30px; animation:orbitDot2 7s infinite ease-in-out; }
+.orbit-dot--3{ width:16px; height:16px; bottom:22px; left:56px; animation:orbitDot3 5.5s infinite ease-in-out; }
+
+/* додаткова плавна «гойдалка» для всього блоку */
+.guest-orbit-bottom{
+    animation:orbitFloat 14s ease-in-out infinite alternate;
+}
+@keyframes ringSpin{
+    from{ transform:rotate(0deg); }
+    to  { transform:rotate(360deg); }
+}
+
+@keyframes dishFloat{
+    0%  { transform:translateY(0); }
+    50% { transform:translateY(-4px); }
+    100%{ transform:translateY(0); }
+}
+
+@keyframes orbitFloat{
+    0%  { transform:translate(-50%, 0); }
+    50% { transform:translate(-50%, -6px); }
+    100%{ transform:translate(-50%, 0); }
+}
 
 @keyframes orbitPulse{
     0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(115,21,54,.0);}
@@ -3053,10 +4438,33 @@ main{
     50%{ transform:translate(6px,-4px); }
     100%{ transform:translate(0,0); }
 }
+@keyframes plateFloat{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-4px); }
+}
+@keyframes orbitGlow{
+    0%{
+        opacity:0.0;
+        box-shadow:0 0 0 0 rgba(255,192,203,.0);
+    }
+    40%{
+        opacity:1;
+        box-shadow:0 0 18px 6px rgba(255,192,203,.55);
+    }
+    100%{
+        opacity:0;
+        box-shadow:0 0 0 0 rgba(255,192,203,.0);
+    }
+}
 
 .guest-actions{
-    margin:6px 0 4px;
-    transition:opacity .22s ease, transform .22s ease, height .22s ease;
+    margin:4px 0 2px;
+    /* було тільки opacity/transform у transition */
+    transition: opacity .22s ease,
+    transform .22s ease,
+    height .22s ease,
+    margin .22s ease;
+    height:auto;
 }
 .guest-actions__buttons{
     display:flex;
@@ -3072,26 +4480,68 @@ main{
     font-weight:600;
     font-size:14px;
     cursor:pointer;
-    transition:.18s ease;
+    position:relative;
+    overflow:hidden;
+    transition:background .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease,
+    border-color .18s ease,
+    color .18s ease;
 }
 .btn-pill.is-selected{
     background:var(--brand);
     color:#fff;
+    border-color:var(--brand);
     box-shadow:0 6px 16px rgba(115,21,54,.28);
     transform:translateY(-1px);
 }
-.btn-pill:hover{
-    background:#ffe6ee;
+.btn-pill:not(.is-selected):hover{
+    background:#ffe3ed;
+    border-color:#f0b6c9;
+    transform:translateY(-1px);
 }
+.btn-pill.is-selected:hover{
+    background:linear-gradient(135deg,#731536,#a4215a);
+    box-shadow:0 10px 22px rgba(115,21,54,.35);
+    transform:translateY(-2px) scale(1.01);
+}
+.btn-pill::after{
+    content:"";
+    position:absolute;
+    top:0;
+    left:-40%;
+    width:40%;
+    height:100%;
+    background:linear-gradient(120deg,rgba(255,255,255,.0),rgba(255,255,255,.55),rgba(255,255,255,0));
+    transform:skewX(-18deg);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+}
+.btn-pill:hover::after{
+    opacity:1;
+    animation:btnShine .7s forwards;
+}
+@keyframes btnShine{
+    0%{ transform:translateX(0) skewX(-18deg); }
+    100%{ transform:translateX(260%) skewX(-18deg); }
+}
+
+
 .guest-actions.is-collapsed{
     opacity:0;
     transform:translateY(-6px);
     pointer-events:none;
+
+    /* головне: забираємо місце під блок */
+    height:0;
+    margin:0;
+    overflow:hidden;
 }
 .guest-note{
     font-size:12px;
     color:#8b7380;
-    margin:4px 0 6px;
+    margin:4px 0 4px;
 }
 .guest-forms{
     margin-top:4px;
@@ -3137,6 +4587,14 @@ main{
 
 /* пароль + одне «око» */
 .password-field input{ padding-right:40px; }
+/* ховаємо системні "очки" в деяких браузерах */
+.password-field input::-ms-reveal,
+.password-field input::-ms-clear {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 .password-toggle{
     position:absolute;
     right:10px;
@@ -3176,6 +4634,16 @@ main{
     width:100%;
     margin-top:6px;
     padding:12px 14px;
+    box-shadow:
+            0 8px 18px rgba(115,21,54,.35),
+            0 0 14px rgba(115,21,54,.25);
+    transition: transform .18s ease, box-shadow .22s ease;
+}
+.btn-primary--wide:hover {
+    transform: translateY(-1px);
+    box-shadow:
+            0 14px 26px rgba(115,21,54,.55),
+            0 0 26px rgba(115,21,54,.45);
 }
 .btn-primary:hover{
     background:#5c0f2b;
@@ -3209,7 +4677,11 @@ main{
     z-index:1;
 }
 .user-tabs .tab{
-    padding:8px 12px;
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 14px;
     border-radius:999px;
     border:1px solid #E8CCD3;
     background:#fff;
@@ -3217,42 +4689,174 @@ main{
     font-weight:600;
     font-size:13px;
     cursor:pointer;
+    overflow:hidden;
+    transition:
+            background .2s ease,
+            box-shadow .2s ease,
+            color .2s ease,
+            transform .18s ease,
+            border-color .2s ease;
+}
+.user-tabs .tab:hover{
+    background:#FFF7F9;
+    border-color:#f0b6c9;
+    transform:translateY(-1px);
 }
 .user-tabs .tab.is-active{
-    background:var(--paper);
+    background:linear-gradient(135deg,#fff0f4,#ffe5ef);
     color:var(--brand);
-    box-shadow:inset 0 0 0 2px var(--brand);
+    border-color:var(--brand);
+    box-shadow:
+            0 0 0 1px rgba(255,192,211,.65),
+            0 8px 18px rgba(115,21,54,0.25);
+}
+.user-tabs .tab.is-active::after{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    border-radius:inherit;
+    box-shadow:0 0 18px 4px rgba(115,21,54,.35);
+    opacity:.7;
+    pointer-events:none;
 }
 
 .tab-panels .panel{
     padding:6px 2px 2px;
 }
+.user-tabs .tab::before{
+    font-size:15px;
+    display:inline-block;
+}
+.user-tabs .tab[data-tab="profile"]::before{
+    content:"👤";
+}
+
+/* Favourites */
+.user-tabs .tab[data-tab="prefs"]::before{
+    content:"⭐";
+}
+
+/* Orders */
+.user-tabs .tab[data-tab="orders"]::before{
+    content:"🧾";
+}
+
+/* Points */
+.user-tabs .tab[data-tab="points"]::before{
+    content:"💰";
+}
+.user-tabs .tab[data-tab="settings"]::before{
+    content:"⚙️";
+}
+.orders-points-pill{
+    padding:6px 10px;
+    border-radius:999px;
+    background:#e8fff3;
+    border:1px solid #b2f0cc;
+    font-size:12px;
+    font-weight:700;
+    color:#067647;
+    box-shadow:0 6px 14px rgba(6,118,71,0.18);
+}
 
 /* ====== Профіль ====== */
-.profile-header{
-    display:flex;
-    gap:12px;
-    align-items:center;
-    margin-bottom:10px;
+.profile-header {
+    background: transparent;       /* було #fff – прибрали */
+    /*  border-radius: 20px;  */       /* не потрібне */
+    padding: 0;                    /* щоб усе сиділо в рамці .profile-card */
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    animation: profileFade .5s ease-out;
 }
+.profile-card{
+    border-radius: 22px;
+    padding: 14px 14px;
+    margin: 10px 0 12px;
+    background: linear-gradient(180deg,#ffffff,#fff7fb);
+    border: 1px solid #F7CAD9;
+    box-shadow:
+            0 14px 36px rgba(115,21,54,0.16),
+            0 0 0 1px rgba(255,255,255,0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+/* неонове світіння по контуру */
+.profile-card--glow::before{
+    content:"";
+    position:absolute;
+    inset:-1px;
+    border-radius:inherit;
+    background:
+            radial-gradient(circle at 0 0, rgba(255,180,210,0.16), transparent 55%),
+            radial-gradient(circle at 100% 100%, rgba(115,21,54,0.18), transparent 60%);
+    opacity:0.9;
+    pointer-events:none;
+    mix-blend-mode:screen;
+}
+/* легка смужка-highlight під аватаркою */
+.profile-card--glow::after{
+    content:"";
+    position:absolute;
+    left:60px;
+    right:10px;
+    bottom:0;
+    height:26px;
+    background:linear-gradient(90deg,
+    rgba(255,255,255,0),
+    rgba(255,215,230,0.8),
+    rgba(255,255,255,0));
+    opacity:0.35;
+    pointer-events:none;
+}
+
+/*
+/* аватар */
 .profile-avatar{
-    width:46px;
-    height:46px;
-    border-radius:14px;
-    border:1px solid #E8CCD3;
+    width:52px;
+    height:52px;
+    border-radius:16px;
+    border:1px solid #F3C1D3;
     background:var(--paper);
     display:grid;
     place-items:center;
+    position:relative;
 }
+
+
+
 .profile-avatar__initial{
-    font-weight:800;
-    color:#fff;
-    background:var(--brand);
-    width:30px;
-    height:30px;
+    width:34px;
+    height:34px;
     border-radius:999px;
+    background:var(--brand);
+    color:#fff;
     display:grid;
     place-items:center;
+    font-weight:800;
+}
+.profile-avatar--glow::before{
+    content:"";
+    position:absolute;
+    inset:4px;
+    border-radius:inherit;
+    box-shadow:0 0 18px rgba(115,21,54,0.45);
+    opacity:0.65;
+    filter:blur(2px);
+    animation:avatarPulse 3.6s ease-in-out infinite;
+    pointer-events:none;
+}
+
+@keyframes avatarPulse{
+    0%,100%{
+        opacity:0.3;
+        transform:scale(0.98);
+    }
+    50%{
+        opacity:0.9;
+        transform:scale(1.03);
+    }
 }
 .profile-main__row{
     display:flex;
@@ -3260,75 +4864,178 @@ main{
     gap:8px;
     margin-bottom:2px;
 }
-.profile-name{
-    margin:0;
-    font-size:17px;
-    text-transform:lowercase;
+.profile-name {
+    font-size: 20px !important;
+    font-weight: 700;
+    margin: 0;
+    color: #2D2D2D;
+    text-shadow: 0 1px 6px rgba(115,21,54,0.15);
 }
-.profile-badge{
-    padding:3px 8px;
-    border-radius:999px;
-    background:#E6FAF5;
-    color:#067647;
-    font-size:11px;
-    font-weight:600;
+.profile-badge {
+    background: #D7FFF0;
+    color: #067647;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow:
+            0 0 10px rgba(0,255,180,0.35),
+            inset 0 0 6px rgba(0,255,180,0.25);
 }
-.profile-email{
-    margin:0;
-    font-size:13px;
-    color:var(--muted);
+.profile-email {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: #8B7380;
 }
-.profile-stats{
-    list-style:none;
-    margin:10px 0 0;
-    padding:0;
+
+.profile-metrics{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:8px;
+    gap:10px;
+    margin:6px 0 14px;
 }
-.profile-stats li{
-    border:1px solid #EEE;
-    border-radius:12px;
-    padding:8px 8px;
+
+.metric-card{
+    border-radius:16px;
+    padding:9px 10px 10px;
     background:#fff;
-    text-align:left;
+    border:1px solid #F0D1DD;
+    box-shadow:0 8px 22px rgba(115,21,54,0.08);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
 }
-.profile-stats__label{
-    display:block;
+
+.metric-card__top{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+.metric-card__icon{
+    width:22px;
+    height:22px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    font-size:13px;
+    background:#FFF0F2;
+    box-shadow:0 4px 10px rgba(115,21,54,0.12);
+}
+.metric-card__label{
     font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
     color:var(--muted);
 }
-.profile-stats__value{
-    display:block;
-    margin-top:2px;
+.metric-card__value{
+    font-size:20px;
     font-weight:700;
-    font-size:15px;
+    margin-top:2px;
+}
+
+/* акценти кольором для різних карток */
+.metric-card--recipes .metric-card__icon{
+    background:#FFF7E6;
+}
+.metric-card--orders .metric-card__icon{
+    background:#E6F4FF;
+}
+.metric-card--points .metric-card__icon{
+    background:#FFF0F2;
+}
+
+/* hover-анімація */
+.metric-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 32px rgba(115,21,54,0.16);
+    transition:.18s ease;
+}
+
+/* адаптив для вузьких екранів */
+@media (max-width: 420px){
+    .profile-metrics{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    .metric-card--points{
+        grid-column:1 / -1;
+    }
+}
+
+/* ===== Анімація появи профілю ===== */
+
+@keyframes profileFadeUp{
+    from{
+        opacity:0;
+        transform:translateY(8px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+.profile-anim{
+    opacity:0;
+    animation:profileFadeUp .32s ease forwards;
+}
+.profile-anim--d1{ animation-delay:.04s; }
+.profile-anim--d2{ animation-delay:.08s; }
+.profile-anim--d3{ animation-delay:.12s; }
+.profile-anim--d4{ animation-delay:.18s; }
+
+.profile-stats__label {
+    font-size: 12px;
+    color: #8B7380;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.profile-stats__value {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 6px;
+    color: #2D2D2D;
 }
 
 /* LOGOUT BUTTON */
-.logout-btn{
-    margin-top:16px;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:10px 16px;
-    border-radius:999px;
-    border:1px solid #E8CCD3;
-    background:#FFF0F2;
-    color:var(--brand);
-    font-weight:600;
-    cursor:pointer;
-    transition:.18s ease;
+.logout-btn {
+    background: #FFF0F4;
+    border-radius: 16px;
+    border: 1px solid #F3C4D1;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #731536;
+    cursor: pointer;
+    margin-top: 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: .25s ease;
+    box-shadow:
+            0 10px 20px rgba(115,21,54,0.10),
+            0 0 14px rgba(255,215,228,0.5);
 }
+
 .logout-btn .logout-icon{
     display:inline-block;
     transform:rotate(180deg);
 }
-.logout-btn:hover{
-    background:#ffe6ee;
-    transform:translateY(-1px);
+.logout-btn:hover {
+    background: #ffe6ee;
+    transform: translateY(-2px);
+    box-shadow:
+            0 14px 26px rgba(115,21,54,0.15),
+            0 0 20px rgba(255,215,228,0.7);
+}
+@keyframes avatarGlow {
+    0%, 100% { opacity: .55; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.06); }
 }
 
+@keyframes profileFade {
+    0%   { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
 /* ====== PREFS / ORDERS ====== */
 .panel-title{
     margin:0 0 6px;
@@ -3346,11 +5053,14 @@ main{
     margin-top:4px;
 }
 .saved-card{
-    border:1px solid #EEE;
-    border-radius:12px;
-    padding:12px;
-    background:#fff;
+    border-radius: 18px;
+    background:#FFF;
+    box-shadow:0 18px 40px rgba(15,23,42,0.06);
+    padding:14px 16px 12px;
+    margin-bottom:12px;
+    font-family:'Inter',system-ui,sans-serif;
 }
+
 .saved-top{
     display:flex;
     justify-content:space-between;
@@ -3358,7 +5068,9 @@ main{
     gap:10px;
 }
 .saved-title{
-    font-weight:600;
+    margin:0 0 4px;
+    font-size:16px;
+    font-weight:700;
 }
 .saved-meta{
     display:flex;
@@ -3385,192 +5097,832 @@ main{
     border:1px dashed #E8CCD3;
 }
 
-/* ====== POINTS (новий бейдж + FAQ) ====== */
-.points-header{
+/* ====== FAVOURITES SECTION ====== */
+
+/* ============================
+   FAVOURITES SECTION WRAPPER
+============================ */
+.favs-section{
+    margin-top:16px;
+    padding:4px 0 18px;
+}
+
+.favs-title{
+    margin:0 0 4px;
+    font-size:22px;
+    font-weight:700;
+    color:#2D2D2D;
+    text-shadow:
+            0 0 8px rgba(255, 170, 200, 0.4),
+            0 2px 4px rgba(115, 21, 54, 0.15);
+}
+.favs-sub{
+    margin:0 0 14px;
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 520px;
+
+    color: #7a7a7a;
+
+    /* ягідний акцентний лівий бордер */
+    border-left: 4px solid rgba(115, 21, 54, 0.35);
+    padding-left: 12px;
+
+    /* фоновий легкий градієнт */
+    background: linear-gradient(
+            to right,
+            rgba(255, 240, 245, 0.7),
+            rgba(255, 255, 255, 0)
+    );
+
+    border-radius: 8px;
+
+    /* дуже м’яка тінь */
+    box-shadow: 0 4px 10px rgba(115, 21, 54, 0.08)
+}
+.favs-sub b {
+    color: #731536;
+    text-shadow: 0 0 6px rgba(255, 150, 180, 0.6);
+}
+.favs-empty{
+    margin-top:8px;
+    padding:14px 16px;
+    border-radius:14px;
+    background:#FFF0F6;
+    border:1px dashed #F3C4D6;
+    font-size:14px;
+    color:#731536;
+}
+
+/* список карток */
+.saved-list{
     display:flex;
-    align-items:center;
-    gap:10px;
+    flex-direction:column;
+    gap:12px;
+    margin-top:10px;
+}
+
+/* картка */
+.saved-card {
+    position: relative;
+    border-radius: 18px;
+    padding: 16px 16px 14px;
+    background: #fff;
+    border: 1px solid #F3D3E0;
+    box-shadow: 0 10px 24px rgba(115,21,54,.10);
+    animation: favCardShow .35s ease;
+}
+
+@keyframes favCardShow {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* верхній ряд: назва + права колонка */
+.saved-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
     margin-bottom:8px;
 }
-.points-pill{
+.saved-header-main{
+    min-width:0;
+}
+.saved-title-col{
+    flex:1 1 auto;
+    max-width:60%;
+}
+
+.saved-title{
+    margin:0 0 2px;
+    font-size:15px;
+    font-weight:600;
+    color:#101828;
+}
+
+.saved-count{
+    font-size:12px;
+    color:#667085;
+}
+
+
+.saved-date{
+    font-size:12px;
+    color:var(--muted);
+    opacity:.8;
+}
+
+/* pill ціни/ккал */
+.saved-pill{
     display:inline-flex;
     align-items:center;
+    gap:4px;
+    border-radius:999px;
+    padding:4px 10px;
+    font-size:12px;
+    background:linear-gradient(135deg,#FFE4F0,#FFEFF7);
+    color:#B4235D;
+    white-space:nowrap;
+}
+
+.saved-pill__dot{ opacity:.5; }
+.saved-pill__kcal{ color:#c01250; }
+.saved-body{
+    border-top:1px dashed #F2F4F7;
+    padding-top:8px;
+    display:flex;
+    flex-direction:column;
     gap:6px;
-    background:#FFF0F2;
-    border:1px solid #E8CCD3;
-    color:var(--brand);
-    padding:6px 12px;
-    border-radius:999px;
-    font-weight:700;
-    font-size:14px;
-    cursor:pointer;
-    transition:.15s ease;
 }
-.points-pill__icon{
-    font-size:18px;
-}
-.points-pill:hover{
-    background:#ffe6ee;
-    transform:translateY(-1px);
-    box-shadow:0 6px 14px rgba(115,21,54,.18);
-}
-.points-caption{
-    font-size:12px;
-    color:var(--muted);
-}
-.points-faq{
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px dashed #E8CCD3;
-    background:#FFF7F9;
+/* блок інгредієнтів */
+.saved-ings{
     font-size:13px;
-    margin-bottom:10px;
+    color:#475467;
 }
-.points-faq h4{
-    margin:4px 0 4px;
-    font-size:14px;
+.saved-ings-label{
+    font-weight:500;
+    margin-right:4px;
 }
-.points-faq ul{
-    margin:0 0 6px 18px;
-    padding:0;
-}
-.points-history-title{
-    margin:8px 0 4px;
-    font-size:14px;
-}
-.points-history{
-    margin-top:4px;
-    font-size:12px;
-    border-top:1px dashed #E8CCD3;
-    padding-top:6px;
-}
-.points-history-item{
-    display:flex;
-    justify-content:space-between;
-    gap:8px;
-    margin-bottom:4px;
+.saved-ings-text{
+    word-wrap:break-word;
 }
 
-/* ====== SETTINGS (нові картки + свічі) ====== */
-.settings-card{
-    border-radius:14px;
-    border:1px solid #EEE;
-    padding:10px 12px;
-    background:#fff;
-    margin-bottom:10px;
-}
-.settings-card--danger{
-    border-color:#F4B1A8;
-    background:#FFF5F3;
-}
-.settings-card h4{
-    margin:0 0 4px;
-    font-size:14px;
-}
-.settings-note{
-    margin:0 0 8px;
-    font-size:12px;
-    color:var(--muted);
+/* кнопка смітника */
+/* верхня стрічка справа: pill + кошик */
+/* низ картки: дата + кнопка видалення */
+.fav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #f0c8d4;
 }
 
-.switch-row{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    cursor:pointer;
-    font-size:13px;
+.fav-date {
+    font-size: 13px;
+    color: #999;
 }
-.switch-row input{
-    position:absolute;
-    opacity:0;
-    pointer-events:none;
+
+.fav-remove-btn {
+    border: none;
+    background: #FDF2F7;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #B85C6E;
+    transition: 0.18s ease;
 }
-.switch-faux{
-    width:34px;
-    height:20px;
-    border-radius:999px;
-    background:#E4E4E7;
-    position:relative;
-    flex:0 0 auto;
-    transition:.18s ease;
+
+.fav-remove-btn:hover {
+    background: #ffe6ef;
+    color: #731536;
+    transform: translateY(-1px);
 }
-.switch-faux::after{
+
+@media (max-width: 420px) {
+    .saved-main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .saved-title-col {
+        max-width: 100%;
+    }
+
+    .saved-side {
+        align-items: flex-start;
+    }
+}
+/* ===== ORDERS TAB ===== */
+
+.orders-header-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.orders-header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+}
+
+#ordersList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Базова картка замовлення – наслідує saved-card */
+/* ========== ORDERS MAIN CARD ========== */
+.orders-card {
+    border-radius: 20px;
+    padding: 20px 22px;
+    background: linear-gradient(135deg, #ffffff 0%, #fff2f6 100%);
+    box-shadow: 0 6px 14px rgba(115, 21, 54, 0.08);
+    margin-bottom: 16px;
+    transition: .25s ease;
+    cursor: pointer;
+    border: 1.5px solid #f7d7e2;
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+.orders-card--expanded {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 32px rgba(115,21,54,.12);
+}
+.orders-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(115, 21, 54, 0.14);
+}
+
+/* TITLE ROW */
+.orders-id-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.orders-hash {
+    font-weight: 800;
+    color: var(--brand);
+    font-size: 18px;
+}
+
+/* AMOUNT / STATUS ROW */
+.saved-meta-row {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.order-amount-label {
+    color: var(--muted);
+    margin-right: 4px;
+}
+
+/* STATUS PILL */
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #fff;
+}
+
+.status-pill--new {
+    background: #ff4d7c;
+}
+
+.status-pill--cooking {
+    background: #ff9f3f;
+}
+
+.status-pill--delivered {
+    background: #53c268;
+}
+
+/* POINTS FOR THE ORDER */
+.orders-points-pill {
+    background: rgba(115,21,54,0.08);
+    padding: 10px 14px;
+    border-radius: 16px;
+    text-align: center;
+    min-width: 70px;
+}
+
+.orders-points-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.orders-points-caption {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* FOOTER */
+.orders-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;   /* ⬅⬅⬅ Було space-between */
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.saved-date {
+    color: #8c5a6e;
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 2px; /* ⬅ красиве вирівнювання */
+}
+.orders-mini-note {
+    font-size: 12px;
+    color: #b76c85;
+    opacity: .85;
+}
+
+/* Tiny status progress bar under card */
+.orders-card::after {
     content:"";
-    position:absolute;
-    top:2px;
-    left:3px;
-    width:16px;
-    height:16px;
-    border-radius:999px;
-    background:#fff;
-    box-shadow:0 1px 4px rgba(0,0,0,.25);
-    transition:.18s ease;
-}
-.switch-row input:checked + .switch-faux{
-    background:var(--brand);
-}
-.switch-row input:checked + .switch-faux::after{
-    transform:translateX(12px);
-}
-.switch-label{
-    font-size:13px;
+    display:block;
+    height: 4px;
+    width: 100%;
+    margin-top: 12px;
+    border-radius: 20px;
+    background: var(--progress-color, #ff4d7c);
 }
 
-/* маленька сіра кнопка очищення */
-.btn.ghost.small{
-    padding:8px 12px;
-    border-radius:10px;
-    border:1px solid #E8CCD3;
-    background:#FFF7F9;
-    color:var(--brand);
-    font-size:13px;
+/* Status dependent progress color */
+.orders-card--new {
+    --progress-color: #ff4d7c;
+}
+.orders-card--cooking {
+    --progress-color: #ff9f3f;
+}
+.orders-card--delivered {
+    --progress-color: #53c268;
+}
+.orders-chevron {
+    font-size: 16px;
+    line-height: 1;
+    transform: rotate(0deg);
+    transition: transform .2s ease;
 }
 
-/* ====== DARK THEME ====== */
-.theme-dark body{
-    background:#0e0e10;
-    color:#f1f1f1;
-}
-.theme-dark .user-panel{
-    background:#141416;
-    color:#eaeaea;
-    border-left-color:#1e1e22;
-    box-shadow:-14px 0 34px rgba(0,0,0,.5);
-}
-.theme-dark .user-panel__head{ border-bottom-color:#1e1e22; }
-.theme-dark .user-tabs{ background:#141416; }
-.theme-dark .user-tabs .tab{
-    background:#141416;
-    border-color:#2a1a20;
-    color:#e8e8e8;
-}
-.theme-dark .user-tabs .tab.is-active{
-    background:#24161a;
-    color:#ffceda;
-    box-shadow:inset 0 0 0 2px #b54e60;
-}
-.theme-dark .user-hero__subtitle,
-.theme-dark .guest-note{ color:#a0a0b8; }
-.theme-dark .auth-card{
-    background:#151518;
-    border-color:#232327;
-    color:#eee;
-}
-.theme-dark .auth-card input{
-    background:#0f0f12;
-    border-color:#2a2a30;
-    color:#e8e8e8;
-}
-.theme-dark .profile-stats li{
-    background:#151518;
-    border-color:#232327;
-}
-.theme-dark .settings-card{
-    background:#151518;
-    border-color:#232327;
-}
-.theme-dark .points-pill{
-    background:#24161a;
-    border-color:#2a1a20;
+.orders-chevron.is-open {
+    transform: rotate(180deg);
 }
 
+/* Деталі замовлення */
+.orders-details {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(115,21,54,.15);
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.orders-details-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+}
+
+.orders-details-list {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0;
+}
+
+.orders-details-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(115,21,54,0.07);
+}
+
+.orders-details-item-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.orders-details-item-meta {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+    .orders-details-row:last-child {
+        border-bottom: none;
+    }
+
+.orders-details-note {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: .85;
+    display: none
+}
+
+    /* ====== POINTS (новий бейдж + FAQ) ====== */
+.points-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding: 12px 12px;
+        border-radius: 18px;
+        background: radial-gradient(circle at 0% 0%, #ffe9f4 0, #fff 55%);
+        border: 1px solid #f3d4dd;
+        box-shadow: 0 8px 20px rgba(115, 21, 54, 0.12),
+        0 0 18px rgba(255, 192, 211, 0.45);
+        overflow: hidden;
+    }
+
+.points-header::before,
+.points-header::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: radial-gradient(circle, #ffdf9a 0, #ffb648 55%, #f39a22 100%);
+        box-shadow: 0 0 14px rgba(255, 182, 72, .7);
+    }
+.points-header::before {
+        width: 30px;
+        height: 30px;
+        left: -10px;
+        bottom: 4px;
+        opacity: .9;
+    }
+
+.points-header::after {
+        width: 20px;
+        height: 20px;
+        right: 14px;
+        top: -8px;
+        opacity: .7;
+    }
+
+.points-pill {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 13px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #fff0f2, #ffe1ee);
+        border: 1px solid #E8CCD3;
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 6px 14px rgba(115, 21, 54, 0.25),
+        0 0 16px rgba(255, 192, 211, 0.65);
+        transition: .18s ease;
+    }
+
+.points-pill::after {
+        content: "";
+        position: absolute;
+        left: -20%;
+        top: 0;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(120deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, .65),
+        rgba(255, 255, 255, 0)
+        );
+        transform: skewX(-20deg);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.points-pill__icon {
+        font-size: 18px;
+        animation: coinBounce 1.6s ease-in-out infinite;
+    }
+
+.points-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(115, 21, 54, 0.3),
+        0 0 20px rgba(255, 192, 211, 0.85);
+    }
+
+.points-pill:hover::after {
+        opacity: 1;
+        animation: pointsShine .7s forwards;
+    }
+
+.points-caption {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+@keyframes pointsShine {
+        0% {
+            transform: translateX(0) skewX(-20deg);
+        }
+        100% {
+            transform: translateX(260%) skewX(-20deg);
+        }
+    }
+@keyframes coinBounce {
+        0%, 100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        30% {
+            transform: translateY(-2px) rotate(-8deg);
+        }
+        60% {
+            transform: translateY(1px) rotate(6deg);
+        }
+    }
+.points-faq {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px dashed #E8CCD3;
+        background: #FFF7F9;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+.points-faq h4 {
+        margin: 4px 0 4px;
+        font-size: 14px;
+    }
+
+.points-faq ul {
+        margin: 0 0 6px 18px;
+        padding: 0;
+    }
+
+.points-history-title {
+        margin: 8px 0 4px;
+        font-size: 14px;
+    }
+
+.points-history {
+        margin-top: 4px;
+        font-size: 12px;
+        border-top: 1px dashed #E8CCD3;
+        padding-top: 6px;
+    }
+.points-history-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+.points-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.points-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #fff7fb;
+    font-size: 14px;
+}
+
+.points-row__delta {
+    font-weight: 700;
+    margin-right: 10px;
+}
+
+.points-row--plus  .points-row__delta { color: #27ae60; }
+.points-row--minus .points-row__delta { color: #e74c3c; }
+
+.points-row__reason {
+    color: #555;
+}
+
+.points-row__time {
+    font-size: 12px;
+    color: #999;
+}
+
+    /* базово — приховані */
+    .tab-panels .panel {
+        opacity: 0;
+        transform: translateY(4px);
+
+        transition: opacity .24s ease, transform .24s ease;
+    }
+
+    /* будь-яка панель, у якої НЄМАЄ hidden → плавно зʼявляється */
+    .tab-panels .panel:not([hidden]) {
+        animation: panelIn .26s ease-out;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @keyframes panelIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ====== SETTINGS (нові картки + свічі) ====== */
+    .settings-card {
+        border-radius: 14px;
+        border: 1px solid #EEE;
+        padding: 10px 12px;
+        background: #fff;
+        margin-bottom: 10px;
+    }
+
+    .settings-card--danger {
+        border-color: #F4B1A8;
+        background: #FFF5F3;
+    }
+
+    .settings-card h4 {
+        margin: 0 0 4px;
+        font-size: 14px;
+    }
+
+    .settings-note {
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .switch-row input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .switch-faux {
+        width: 34px;
+        height: 20px;
+        border-radius: 999px;
+        background: #E4E4E7;
+        position: relative;
+        flex: 0 0 auto;
+        transition: .18s ease;
+    }
+
+    .switch-faux::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+        transition: .18s ease;
+    }
+
+    .switch-row input:checked + .switch-faux {
+        background: var(--brand);
+    }
+
+    .switch-row input:checked + .switch-faux::after {
+        transform: translateX(12px);
+    }
+
+    .switch-label {
+        font-size: 13px;
+    }
+
+    /* маленька сіра кнопка очищення */
+    .btn.ghost.small {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid #E8CCD3;
+        background: #FFF7F9;
+        color: var(--brand);
+        font-size: 13px;
+    }
+
+    /* ====== DARK THEME ====== */
+    .theme-dark body {
+        background: #0e0e10;
+        color: #f1f1f1;
+    }
+
+    .theme-dark .user-panel {
+        background: #141416;
+        color: #eaeaea;
+        border-left-color: #1e1e22;
+        box-shadow: -14px 0 34px rgba(0, 0, 0, .5);
+    }
+
+    .theme-dark .user-panel__head {
+        border-bottom-color: #1e1e22;
+    }
+
+    .theme-dark .user-tabs {
+        background: #141416;
+    }
+
+    .theme-dark .user-tabs .tab {
+        background: #141416;
+        border-color: #2a1a20;
+        color: #e8e8e8;
+    }
+
+    .theme-dark .user-tabs .tab.is-active {
+        background: #24161a;
+        color: #ffceda;
+        box-shadow: inset 0 0 0 2px #b54e60;
+    }
+
+    .theme-dark .user-hero__subtitle,
+    .theme-dark .guest-note {
+        color: #a0a0b8;
+    }
+
+    .theme-dark .auth-card {
+        background: #151518;
+        border-color: #232327;
+        color: #eee;
+    }
+
+    .theme-dark .auth-card input {
+        background: #0f0f12;
+        border-color: #2a2a30;
+        color: #e8e8e8;
+    }
+
+    .theme-dark .profile-stats li {
+        background: #151518;
+        border-color: #232327;
+    }
+
+    .theme-dark .settings-card {
+        background: #151518;
+        border-color: #232327;
+    }
+
+    .theme-dark .points-pill {
+        background: #24161a;
+        border-color: #2a1a20;
+    }
+
+    /* текст-підказка під формою */
+    .auth-switch {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
+    }
+
+    .auth-switch-btn {
+        background: none;
+        border: none;
+        color: var(--brand);
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 4px;
+        position: relative;
+        transition: color .18s ease;
+    }
+
+    .auth-switch-btn::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 2px;
+        border-radius: 999px;
+        background: radial-gradient(circle,
+        rgba(115, 21, 54, .9) 0%,
+        rgba(115, 21, 54, 0) 75%
+        );
+        opacity: 0;
+        transform: scaleX(.6);
+        transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .auth-switch-btn:hover::after {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+
+    /* коли показуємо логін / реєстрацію — прибрати зайвий відступ */
+    .user-panel.auth-mode-login .guest-note,
+    .user-panel.auth-mode-signup .guest-note {
+        margin-bottom: 2px; /* або 0, якщо хочеш взагалі без відступу */
+    }
+
+    .user-panel.auth-mode-login .guest-forms,
+    .user-panel.auth-mode-signup .guest-forms {
+        margin-top: 0;
+    }
